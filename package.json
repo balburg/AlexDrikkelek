@@ -1,0 +1,29 @@
+{
+  "name": "alexdrikkelek",
+  "version": "1.0.0",
+  "description": "Online board game inspired by La Oca",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules"
+  },
+  "keywords": [
+    "game",
+    "board-game",
+    "azure",
+    "pwa",
+    "nextjs",
+    "fastify"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
