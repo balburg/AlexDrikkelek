@@ -1,0 +1,402 @@
+# Deployment Guide
+
+## Prerequisites
+
+Before deploying AlexDrikkelek, ensure you have:
+
+1. Azure account with active subscription
+2. Azure CLI installed and configured
+3. Node.js 18+ and npm installed
+4. Docker (for containerized deployment)
+
+## Azure Resources Setup
+
+### 1. Resource Group
+
+```bash
+az group create \
+  --name alexdrikkelek-rg \
+  --location westeurope
+```
+
+### 2. Azure SQL Database
+
+```bash
+# Create SQL Server
+az sql server create \
+  --name alexdrikkelek-sql \
+  --resource-group alexdrikkelek-rg \
+  --location westeurope \
+  --admin-user sqladmin \
+  --admin-password <YourPassword>
+
+# Create Database
+az sql db create \
+  --resource-group alexdrikkelek-rg \
+  --server alexdrikkelek-sql \
+  --name alexdrikkelek \
+  --service-objective S0
+
+# Configure firewall
+az sql server firewall-rule create \
+  --resource-group alexdrikkelek-rg \
+  --server alexdrikkelek-sql \
+  --name AllowAzureServices \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 0.0.0.0
+```
+
+### 3. Azure Cache for Redis
+
+```bash
+az redis create \
+  --name alexdrikkelek-redis \
+  --resource-group alexdrikkelek-rg \
+  --location westeurope \
+  --sku Basic \
+  --vm-size c0 \
+  --enable-non-ssl-port false
+```
+
+### 4. Azure Blob Storage
+
+```bash
+# Create storage account
+az storage account create \
+  --name alexdrikkeleksa \
+  --resource-group alexdrikkelek-rg \
+  --location westeurope \
+  --sku Standard_LRS
+
+# Create container for avatars
+az storage container create \
+  --name avatars \
+  --account-name alexdrikkeleksa \
+  --public-access blob
+```
+
+### 5. Azure App Service (Backend)
+
+```bash
+# Create App Service Plan
+az appservice plan create \
+  --name alexdrikkelek-plan \
+  --resource-group alexdrikkelek-rg \
+  --sku B1 \
+  --is-linux
+
+# Create Web App
+az webapp create \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --plan alexdrikkelek-plan \
+  --runtime "NODE|18-lts"
+
+# Configure app settings
+az webapp config appsettings set \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --settings \
+    NODE_ENV=production \
+    PORT=8080 \
+    DB_SERVER=alexdrikkelek-sql.database.windows.net \
+    DB_DATABASE=alexdrikkelek
+```
+
+### 6. Azure Static Web Apps (Frontend)
+
+```bash
+az staticwebapp create \
+  --name alexdrikkelek-frontend \
+  --resource-group alexdrikkelek-rg \
+  --source https://github.com/balburg/AlexDrikkelek \
+  --location westeurope \
+  --branch main \
+  --app-location "packages/frontend" \
+  --output-location ".next"
+```
+
+### 7. Azure AD B2C
+
+1. Create Azure AD B2C tenant from Azure Portal
+2. Register application
+3. Configure sign-up/sign-in user flow
+4. Note down:
+   - Tenant name
+   - Client ID
+   - Client Secret
+
+### 8. Application Insights
+
+```bash
+az monitor app-insights component create \
+  --app alexdrikkelek-insights \
+  --location westeurope \
+  --resource-group alexdrikkelek-rg \
+  --application-type web
+```
+
+## Database Initialization
+
+```bash
+# Connect to Azure SQL Database
+sqlcmd -S alexdrikkelek-sql.database.windows.net \
+  -d alexdrikkelek \
+  -U sqladmin \
+  -P <YourPassword>
+
+# Run schema script
+:r database/schema.sql
+GO
+```
+
+## CI/CD Setup with Azure DevOps
+
+### 1. Create Azure DevOps Project
+
+1. Go to https://dev.azure.com
+2. Create new project: "AlexDrikkelek"
+3. Connect to GitHub repository
+
+### 2. Create Service Connection
+
+1. Project Settings → Service connections
+2. New service connection → Azure Resource Manager
+3. Authenticate and select subscription
+4. Name: "Azure Service Connection"
+
+### 3. Configure Pipeline
+
+The `azure-pipelines.yml` file is already configured. Just:
+
+1. Pipelines → New pipeline
+2. Select GitHub repository
+3. Select existing `azure-pipelines.yml`
+4. Run pipeline
+
+### 4. Add Pipeline Variables
+
+In Azure DevOps pipeline:
+
+```
+AZURE_STATIC_WEB_APPS_API_TOKEN: <from Static Web Apps>
+DB_PASSWORD: <your-db-password>
+REDIS_PASSWORD: <your-redis-key>
+```
+
+## Environment Variables
+
+### Backend (.env)
+
+```bash
+NODE_ENV=production
+PORT=8080
+LOG_LEVEL=info
+
+# CORS
+CORS_ORIGIN=https://alexdrikkelek-frontend.azurestaticapps.net
+
+# Database
+DB_SERVER=alexdrikkelek-sql.database.windows.net
+DB_DATABASE=alexdrikkelek
+DB_USER=sqladmin
+DB_PASSWORD=<password>
+DB_ENCRYPT=true
+
+# Redis
+REDIS_HOST=alexdrikkelek-redis.redis.cache.windows.net
+REDIS_PORT=6380
+REDIS_PASSWORD=<redis-key>
+REDIS_TLS=true
+
+# Storage
+AZURE_STORAGE_CONNECTION_STRING=<connection-string>
+AZURE_STORAGE_CONTAINER=avatars
+
+# AD B2C
+AZURE_AD_B2C_TENANT_NAME=<tenant>
+AZURE_AD_B2C_CLIENT_ID=<client-id>
+AZURE_AD_B2C_CLIENT_SECRET=<client-secret>
+```
+
+### Frontend (.env.production)
+
+```bash
+NEXT_PUBLIC_API_URL=https://alexdrikkelek-backend.azurewebsites.net
+NEXT_PUBLIC_SOCKET_URL=https://alexdrikkelek-backend.azurewebsites.net
+
+NEXT_PUBLIC_AZURE_AD_B2C_TENANT_NAME=<tenant>
+NEXT_PUBLIC_AZURE_AD_B2C_CLIENT_ID=<client-id>
+NEXT_PUBLIC_AZURE_AD_B2C_POLICY_NAME=B2C_1_signupsignin
+
+NEXT_PUBLIC_ENABLE_CHROMECAST=true
+NEXT_PUBLIC_MAX_PLAYERS=10
+NEXT_PUBLIC_MIN_PLAYERS=2
+```
+
+## Manual Deployment
+
+### Backend
+
+```bash
+cd packages/backend
+
+# Build
+npm run build
+
+# Deploy to Azure App Service
+az webapp deployment source config-zip \
+  --resource-group alexdrikkelek-rg \
+  --name alexdrikkelek-backend \
+  --src dist.zip
+```
+
+### Frontend
+
+```bash
+cd packages/frontend
+
+# Build
+npm run build
+
+# Deploy (handled by Static Web Apps GitHub Action)
+```
+
+## Docker Deployment
+
+### Build Images
+
+```bash
+# Backend
+docker build -f packages/backend/Dockerfile -t alexdrikkelek-backend:latest .
+
+# Frontend
+docker build -f packages/frontend/Dockerfile -t alexdrikkelek-frontend:latest .
+```
+
+### Push to Azure Container Registry
+
+```bash
+# Create ACR
+az acr create \
+  --resource-group alexdrikkelek-rg \
+  --name alexdrikkelekacr \
+  --sku Basic
+
+# Login
+az acr login --name alexdrikkelekacr
+
+# Tag and push
+docker tag alexdrikkelek-backend:latest alexdrikkelekacr.azurecr.io/backend:latest
+docker push alexdrikkelekacr.azurecr.io/backend:latest
+
+docker tag alexdrikkelek-frontend:latest alexdrikkelekacr.azurecr.io/frontend:latest
+docker push alexdrikkelekacr.azurecr.io/frontend:latest
+```
+
+## Post-Deployment
+
+### 1. Verify Health
+
+```bash
+# Backend health
+curl https://alexdrikkelek-backend.azurewebsites.net/health
+
+# Frontend
+curl https://alexdrikkelek-frontend.azurestaticapps.net
+```
+
+### 2. Monitor Logs
+
+```bash
+# Backend logs
+az webapp log tail \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg
+
+# View Application Insights
+az portal show --query url --output tsv
+```
+
+### 3. Configure Custom Domain (Optional)
+
+```bash
+# Map custom domain
+az webapp config hostname add \
+  --webapp-name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --hostname api.yourdomain.com
+```
+
+## Troubleshooting
+
+### Backend won't start
+- Check environment variables are set
+- Verify database connection string
+- Check Application Insights logs
+
+### Frontend can't connect to backend
+- Verify CORS settings
+- Check API URL in frontend env
+- Verify network security groups
+
+### Database connection errors
+- Check firewall rules
+- Verify credentials
+- Check connection string format
+
+## Scaling
+
+### Auto-scaling Backend
+
+```bash
+az appservice plan update \
+  --name alexdrikkelek-plan \
+  --resource-group alexdrikkelek-rg \
+  --number-of-workers 3
+
+# Enable auto-scale
+az monitor autoscale create \
+  --resource-group alexdrikkelek-rg \
+  --resource alexdrikkelek-plan \
+  --resource-type Microsoft.Web/serverfarms \
+  --name autoscale-plan \
+  --min-count 1 \
+  --max-count 5 \
+  --count 1
+```
+
+## Monitoring
+
+- Azure Monitor: Resource metrics
+- Application Insights: Request tracking
+- Log Analytics: Centralized logging
+- Alerts: Set up for critical metrics
+
+## Backup
+
+### Database Backup
+
+```bash
+az sql db export \
+  --resource-group alexdrikkelek-rg \
+  --server alexdrikkelek-sql \
+  --name alexdrikkelek \
+  --admin-user sqladmin \
+  --admin-password <password> \
+  --storage-key-type StorageAccessKey \
+  --storage-key <storage-key> \
+  --storage-uri https://alexdrikkeleksa.blob.core.windows.net/backups/db.bacpac
+```
+
+## Security Checklist
+
+- [ ] Enable HTTPS only
+- [ ] Configure firewall rules
+- [ ] Enable Azure AD B2C
+- [ ] Set up CORS properly
+- [ ] Enable Application Insights
+- [ ] Configure backup policies
+- [ ] Review access keys regularly
+- [ ] Enable threat detection
+- [ ] Set up alerts for anomalies
