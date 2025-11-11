@@ -77,8 +77,9 @@ async function start() {
           socket.join(room.id);
           io.to(room.id).emit(SocketEvent.ROOM_UPDATED, updatedRoom);
           console.log(`Player ${data.playerName} joined room ${room.code}`);
-        } catch (error: any) {
-          socket.emit('error', { message: error.message || 'Failed to join room' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to join room';
+          socket.emit('error', { message });
         }
       });
 
@@ -94,8 +95,9 @@ async function start() {
             });
             console.log(`Game started in room ${room.code}`);
           }
-        } catch (error: any) {
-          socket.emit('error', { message: error.message || 'Failed to start game' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to start game';
+          socket.emit('error', { message });
         }
       });
 
@@ -175,8 +177,9 @@ async function start() {
           }
 
           console.log(`Player ${player?.name} moved to position ${player?.position}`);
-        } catch (error: any) {
-          socket.emit('error', { message: error.message || 'Failed to move player' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to move player';
+          socket.emit('error', { message });
         }
       });
 
