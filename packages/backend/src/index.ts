@@ -2,6 +2,9 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { SocketEvent, TileType } from './models/types';
+import * as gameService from './services/gameService';
+import * as challengeService from './services/challengeService';
 
 dotenv.config();
 
@@ -46,6 +49,181 @@ async function start() {
 
     io.on('connection', (socket) => {
       console.log('Client connected:', socket.id);
+
+      // Create Room
+      socket.on(SocketEvent.CREATE_ROOM, async (data: { playerName: string }) => {
+        try {
+          const room = await gameService.createRoom(socket.id, data.playerName);
+          socket.join(room.id);
+          socket.emit(SocketEvent.ROOM_UPDATED, room);
+          console.log(`Room created: ${room.code}`);
+        } catch (error) {
+          socket.emit('error', { message: 'Failed to create room' });
+        }
+      });
+
+      // Join Room
+      socket.on(SocketEvent.JOIN_ROOM, async (data: { code: string; playerName: string }) => {
+        try {
+          const room = await gameService.getRoomByCode(data.code.toUpperCase());
+          if (!room) {
+            socket.emit('error', { message: 'Room not found' });
+            return;
+          }
+
+          await gameService.addPlayerToRoom(room.id, socket.id, data.playerName);
+          const updatedRoom = await gameService.getRoom(room.id);
+          
+          socket.join(room.id);
+          io.to(room.id).emit(SocketEvent.ROOM_UPDATED, updatedRoom);
+          console.log(`Player ${data.playerName} joined room ${room.code}`);
+        } catch (error: any) {
+          socket.emit('error', { message: error.message || 'Failed to join room' });
+        }
+      });
+
+      // Start Game
+      socket.on(SocketEvent.GAME_STARTED, async (data: { roomId: string }) => {
+        try {
+          const room = await gameService.startGame(data.roomId);
+          if (room) {
+            io.to(room.id).emit(SocketEvent.GAME_STARTED, room);
+            io.to(room.id).emit(SocketEvent.TURN_CHANGED, {
+              currentTurn: room.currentTurn,
+              currentPlayer: room.players[room.currentTurn],
+            });
+            console.log(`Game started in room ${room.code}`);
+          }
+        } catch (error: any) {
+          socket.emit('error', { message: error.message || 'Failed to start game' });
+        }
+      });
+
+      // Roll Dice
+      socket.on(SocketEvent.ROLL_DICE, async (data: { roomId: string; playerId: string }) => {
+        try {
+          const room = await gameService.getRoom(data.roomId);
+          if (!room) {
+            socket.emit('error', { message: 'Room not found' });
+            return;
+          }
+
+          // Validate it's the player's turn
+          const currentPlayer = room.players[room.currentTurn];
+          if (currentPlayer.id !== data.playerId) {
+            socket.emit('error', { message: 'Not your turn' });
+            return;
+          }
+
+          // Roll the dice (1-6)
+          const diceRoll = Math.floor(Math.random() * 6) + 1;
+          
+          // Broadcast dice roll to all players in the room
+          io.to(data.roomId).emit(SocketEvent.DICE_ROLLED, {
+            playerId: data.playerId,
+            playerName: currentPlayer.name,
+            diceRoll,
+          });
+
+          console.log(`Player ${currentPlayer.name} rolled a ${diceRoll}`);
+        } catch (error) {
+          socket.emit('error', { message: 'Failed to roll dice' });
+        }
+      });
+
+      // Move Player
+      socket.on(SocketEvent.MOVE_PLAYER, async (data: { roomId: string; playerId: string; diceRoll: number }) => {
+        try {
+          const { room, tile } = await gameService.movePlayer(
+            data.roomId,
+            data.playerId,
+            data.diceRoll
+          );
+
+          const player = room.players.find(p => p.id === data.playerId);
+          
+          // Broadcast player movement
+          io.to(data.roomId).emit(SocketEvent.PLAYER_MOVED, {
+            playerId: data.playerId,
+            playerName: player?.name,
+            newPosition: player?.position,
+            tile,
+          });
+
+          // Check if player landed on a special tile and trigger challenge
+          if (tile && (tile.type === TileType.CHALLENGE || tile.type === TileType.BONUS || tile.type === TileType.PENALTY)) {
+            // Get a random challenge based on tile type
+            const challenge = challengeService.getRandomChallenge();
+            
+            io.to(data.roomId).emit(SocketEvent.CHALLENGE_STARTED, {
+              playerId: data.playerId,
+              playerName: player?.name,
+              tile,
+              challenge,
+            });
+
+            console.log(`Challenge started for player ${player?.name} on ${tile.type} tile`);
+          } else {
+            // No challenge, move to next turn
+            const updatedRoom = await gameService.nextTurn(data.roomId);
+            if (updatedRoom) {
+              io.to(data.roomId).emit(SocketEvent.TURN_CHANGED, {
+                currentTurn: updatedRoom.currentTurn,
+                currentPlayer: updatedRoom.players[updatedRoom.currentTurn],
+              });
+            }
+          }
+
+          console.log(`Player ${player?.name} moved to position ${player?.position}`);
+        } catch (error: any) {
+          socket.emit('error', { message: error.message || 'Failed to move player' });
+        }
+      });
+
+      // Challenge Completed
+      socket.on(SocketEvent.CHALLENGE_COMPLETED, async (data: { 
+        roomId: string; 
+        playerId: string; 
+        challengeId: string;
+        success: boolean;
+        answer?: number;
+      }) => {
+        try {
+          const room = await gameService.getRoom(data.roomId);
+          if (!room) {
+            socket.emit('error', { message: 'Room not found' });
+            return;
+          }
+
+          const player = room.players.find(p => p.id === data.playerId);
+          
+          // Validate trivia answer if provided
+          let isCorrect = data.success;
+          if (data.answer !== undefined) {
+            isCorrect = challengeService.validateTriviaAnswer(data.challengeId, data.answer);
+          }
+
+          // Broadcast challenge result
+          io.to(data.roomId).emit(SocketEvent.CHALLENGE_COMPLETED, {
+            playerId: data.playerId,
+            playerName: player?.name,
+            success: isCorrect,
+          });
+
+          // Move to next turn
+          const updatedRoom = await gameService.nextTurn(data.roomId);
+          if (updatedRoom) {
+            io.to(data.roomId).emit(SocketEvent.TURN_CHANGED, {
+              currentTurn: updatedRoom.currentTurn,
+              currentPlayer: updatedRoom.players[updatedRoom.currentTurn],
+            });
+          }
+
+          console.log(`Challenge ${isCorrect ? 'completed' : 'failed'} by player ${player?.name}`);
+        } catch (error) {
+          socket.emit('error', { message: 'Failed to complete challenge' });
+        }
+      });
 
       socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
