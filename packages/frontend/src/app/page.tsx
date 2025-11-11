@@ -1,42 +1,86 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm lg:flex">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Welcome to AlexDrikkelek
-        </h1>
-      </div>
-      
-      <div className="mt-8 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-2 gap-4">
-        <a
-          href="/player"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Player View{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              →
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Join or create a game room on your smartphone or tablet
+    <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern overflow-hidden">
+      <div className="flex min-h-screen flex-col items-center justify-center p-6">
+        {/* Animated header */}
+        <div className="text-center mb-12 animate-float">
+          <h1 className="text-6xl md:text-8xl font-black text-white mb-4 drop-shadow-2xl">
+            AlexDrikkelek
+          </h1>
+          <p className="text-2xl md:text-3xl font-bold text-white/90 drop-shadow-lg">
+            🎲 Let&apos;s Play! 🎉
           </p>
-        </a>
+        </div>
 
-        <a
-          href="/board"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Board View{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              →
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Display the game board on a TV or large screen
+        {/* Game mode cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full px-4">
+          {/* Player View Card */}
+          <a
+            href="/player"
+            className="group card-game border-8 border-accent-orange hover:border-accent-yellow transition-all duration-300"
+          >
+            <div className="text-center space-y-6">
+              {/* Icon */}
+              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-accent-orange to-accent-yellow rounded-3xl flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300">
+                <span className="text-6xl">📱</span>
+              </div>
+              
+              {/* Title */}
+              <h2 className="text-4xl font-black text-primary group-hover:text-accent-orange transition-colors duration-300">
+                Player View
+              </h2>
+              
+              {/* Description */}
+              <p className="text-lg font-semibold text-gray-600">
+                Join or create a game on your phone or tablet!
+              </p>
+              
+              {/* CTA Button */}
+              <div className="pt-4">
+                <span className="inline-block px-8 py-3 bg-accent-orange text-white font-bold text-xl rounded-full group-hover:bg-accent-yellow group-hover:scale-110 transition-all duration-300 shadow-game">
+                  Let&apos;s Go! →
+                </span>
+              </div>
+            </div>
+          </a>
+
+          {/* Board View Card */}
+          <a
+            href="/board"
+            className="group card-game border-8 border-accent-blue hover:border-accent-green transition-all duration-300"
+          >
+            <div className="text-center space-y-6">
+              {/* Icon */}
+              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-accent-blue to-accent-green rounded-3xl flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300">
+                <span className="text-6xl">📺</span>
+              </div>
+              
+              {/* Title */}
+              <h2 className="text-4xl font-black text-primary group-hover:text-accent-blue transition-colors duration-300">
+                Board View
+              </h2>
+              
+              {/* Description */}
+              <p className="text-lg font-semibold text-gray-600">
+                Display the game board on your TV or big screen!
+              </p>
+              
+              {/* CTA Button */}
+              <div className="pt-4">
+                <span className="inline-block px-8 py-3 bg-accent-blue text-white font-bold text-xl rounded-full group-hover:bg-accent-green group-hover:scale-110 transition-all duration-300 shadow-game">
+                  Show Board! →
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        {/* Fun footer message */}
+        <div className="mt-16 text-center">
+          <p className="text-white text-xl font-bold drop-shadow-lg animate-pulse-slow">
+            ✨ Get ready for an epic game night! ✨
           </p>
-        </a>
+        </div>
       </div>
     </main>
   )
