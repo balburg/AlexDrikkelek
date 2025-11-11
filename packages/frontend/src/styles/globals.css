@@ -2,26 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 51, 51, 51;
+    --background-start-rgb: 246, 248, 250;
+    --background-end-rgb: 255, 255, 255;
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: rgb(var(--background-start-rgb));
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer components {
+  /* Kahoot-inspired button styles */
+  .btn-game {
+    @apply font-bold text-xl px-8 py-4 rounded-xl transition-all duration-150 ease-out;
+    @apply shadow-game hover:shadow-game-hover active:shadow-game-active;
+    @apply hover:translate-y-0.5 active:translate-y-2;
+    @apply transform;
+  }
+
+  .btn-primary {
+    @apply btn-game bg-primary text-white;
+    @apply hover:bg-primary-light active:bg-primary-dark;
+  }
+
+  .btn-secondary {
+    @apply btn-game bg-secondary text-white;
+    @apply hover:bg-secondary-light active:bg-secondary-dark;
+  }
+
+  .btn-blue {
+    @apply btn-game bg-accent-blue text-white;
+    @apply hover:brightness-110 active:brightness-90;
+  }
+
+  .btn-orange {
+    @apply btn-game bg-accent-orange text-white;
+    @apply hover:brightness-110 active:brightness-90;
+  }
+
+  .btn-green {
+    @apply btn-game bg-accent-green text-white;
+    @apply hover:brightness-110 active:brightness-90;
+  }
+
+  /* Fun card styles */
+  .card-game {
+    @apply bg-white rounded-3xl shadow-2xl p-8 transform transition-all duration-300;
+    @apply hover:scale-105;
+  }
+
+  /* Input styles */
+  .input-game {
+    @apply w-full px-6 py-4 text-xl font-bold border-4 border-gray-300 rounded-xl;
+    @apply focus:outline-none focus:ring-4 focus:ring-primary focus:border-primary;
+    @apply transition-all duration-200;
+  }
+}
+
+/* Fun animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Geometric background patterns */
+.bg-pattern {
+  background-image: 
+    linear-gradient(45deg, rgba(70, 23, 143, 0.05) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(70, 23, 143, 0.05) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(70, 23, 143, 0.05) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(70, 23, 143, 0.05) 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
 }

@@ -2,8 +2,8 @@ import '../styles/globals.css'
 import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AlexDrikkelek - Online Board Game',
-  description: 'Online board game inspired by La Oca with dynamic challenges',
+  title: 'AlexDrikkelek - Fun Online Board Game! 🎲',
+  description: 'Join the most fun online board game inspired by La Oca! Play with friends, roll the dice, and have a blast! 🎉',
   manifest: '/manifest.json',
 }
 
@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#0066CC',
+  themeColor: '#46178F',
 }
 
 export default function RootLayout({
