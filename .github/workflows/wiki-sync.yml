@@ -1,0 +1,64 @@
+name: Sync Wiki Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/wiki/**'
+  workflow_dispatch:
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sync documentation to wiki
+        run: |
+          # Copy all markdown files from docs/wiki to wiki repository
+          cp -r docs/wiki/* wiki/
+          
+          # Copy screenshots
+          mkdir -p wiki/screenshots
+          if [ -d "docs/wiki/screenshots" ]; then
+            cp -r docs/wiki/screenshots/* wiki/screenshots/
+          fi
+          
+          cd wiki
+          
+          # Configure git
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Add all changes
+          git add .
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            # Commit and push
+            git commit -m "wiki: sync documentation from main repository"
+            git push origin master
+            echo "Wiki documentation synced successfully!"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "### Wiki Sync Complete! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation has been synced to the GitHub Wiki." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the wiki at: https://github.com/${{ github.repository }}/wiki" >> $GITHUB_STEP_SUMMARY
