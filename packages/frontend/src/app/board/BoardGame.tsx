@@ -3,6 +3,7 @@
 import { useSocket } from '@/lib/SocketProvider';
 import { useState, useEffect } from 'react';
 import { GameRoom, SocketEvent, Player } from '@/types/game';
+import Board from '@/components/Board';
 
 export default function BoardGame() {
   const { socket, isConnected } = useSocket();
@@ -187,50 +188,57 @@ export default function BoardGame() {
           </div>
         )}
 
-        {/* Main Game Info */}
-        <div className="card-game max-w-6xl mx-auto border-8 border-white">
-          {/* Current Turn Indicator */}
-          {gameRoom.status === 'PLAYING' && (
-            <div className="bg-gradient-to-r from-accent-green to-accent-blue rounded-2xl p-6 mb-8 text-center">
-              <p className="text-2xl md:text-3xl font-bold text-white mb-2">
-                🎯 Current Turn
-              </p>
-              <p className="text-4xl md:text-6xl font-black text-white">
-                {gameRoom.players[gameRoom.currentTurn]?.name}
-              </p>
-            </div>
-          )}
+        {/* Current Turn Indicator */}
+        {gameRoom.status === 'PLAYING' && (
+          <div className="bg-gradient-to-r from-accent-green to-accent-blue rounded-2xl p-6 mb-6 text-center max-w-6xl mx-auto border-8 border-white shadow-2xl">
+            <p className="text-2xl md:text-3xl font-bold text-white mb-2">
+              🎯 Current Turn
+            </p>
+            <p className="text-4xl md:text-6xl font-black text-white">
+              {gameRoom.players[gameRoom.currentTurn]?.name}
+            </p>
+          </div>
+        )}
 
-          {/* Players Grid */}
-          <div>
+        {/* Visual Board - Only show during gameplay */}
+        {gameRoom.status === 'PLAYING' && (
+          <div className="card-game max-w-6xl mx-auto border-8 border-white mb-6">
             <h2 className="text-3xl md:text-4xl font-black text-primary mb-6 text-center">
-              👥 Players ({gameRoom.players.filter(p => !p.name.includes('Board Display')).length}/{gameRoom.maxPlayers})
+              🎲 Game Board
             </h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {gameRoom.players.filter(p => !p.name.includes('Board Display')).map((player, index) => (
-                <div 
-                  key={player.id}
-                  className={`rounded-2xl p-4 md:p-6 text-center transform transition-all duration-300 shadow-game border-4 ${
-                    gameRoom.status === 'PLAYING' && gameRoom.currentTurn === index
-                      ? 'bg-gradient-to-br from-accent-yellow to-accent-orange border-white scale-105 animate-pulse'
-                      : 'bg-gradient-to-br from-accent-green to-accent-blue border-white'
-                  }`}
-                >
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center shadow-inner">
-                    <span className="text-3xl md:text-4xl">🎮</span>
-                  </div>
-                  <p className="font-black text-white text-lg md:text-xl break-words">
-                    {player.isHost && '👑 '}{player.name}
-                  </p>
-                  {gameRoom.status === 'PLAYING' && (
-                    <p className="text-sm md:text-base font-bold text-white/90 mt-2">
-                      Position: {player.position}
-                    </p>
-                  )}
+            <Board board={gameRoom.board} players={gameRoom.players} />
+          </div>
+        )}
+
+        {/* Players Grid */}
+        <div className="card-game max-w-6xl mx-auto border-8 border-white">
+          <h2 className="text-3xl md:text-4xl font-black text-primary mb-6 text-center">
+            👥 Players ({gameRoom.players.filter(p => !p.name.includes('Board Display')).length}/{gameRoom.maxPlayers})
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {gameRoom.players.filter(p => !p.name.includes('Board Display')).map((player, index) => (
+              <div 
+                key={player.id}
+                className={`rounded-2xl p-4 md:p-6 text-center transform transition-all duration-300 shadow-game border-4 ${
+                  gameRoom.status === 'PLAYING' && gameRoom.currentTurn === index
+                    ? 'bg-gradient-to-br from-accent-yellow to-accent-orange border-white scale-105 animate-pulse'
+                    : 'bg-gradient-to-br from-accent-green to-accent-blue border-white'
+                }`}
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center shadow-inner">
+                  <span className="text-3xl md:text-4xl">🎮</span>
                 </div>
-              ))}
-            </div>
+                <p className="font-black text-white text-lg md:text-xl break-words">
+                  {player.isHost && '👑 '}{player.name}
+                </p>
+                {gameRoom.status === 'PLAYING' && (
+                  <p className="text-sm md:text-base font-bold text-white/90 mt-2">
+                    Position: {player.position}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Game Status */}
