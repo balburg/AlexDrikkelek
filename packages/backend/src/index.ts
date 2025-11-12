@@ -51,9 +51,9 @@ async function start() {
       console.log('Client connected:', socket.id);
 
       // Create Room
-      socket.on(SocketEvent.CREATE_ROOM, async (data: { playerName: string }) => {
+      socket.on(SocketEvent.CREATE_ROOM, async (data: { playerName: string; avatar?: string }) => {
         try {
-          const room = await gameService.createRoom(socket.id, data.playerName);
+          const room = await gameService.createRoom(socket.id, data.playerName, data.avatar);
           socket.join(room.id);
           socket.emit(SocketEvent.ROOM_UPDATED, room);
           console.log(`Room created: ${room.code}`);
@@ -63,7 +63,7 @@ async function start() {
       });
 
       // Join Room
-      socket.on(SocketEvent.JOIN_ROOM, async (data: { code: string; playerName: string }) => {
+      socket.on(SocketEvent.JOIN_ROOM, async (data: { code: string; playerName: string; avatar?: string }) => {
         try {
           const room = await gameService.getRoomByCode(data.code.toUpperCase());
           if (!room) {
@@ -71,7 +71,7 @@ async function start() {
             return;
           }
 
-          await gameService.addPlayerToRoom(room.id, socket.id, data.playerName);
+          await gameService.addPlayerToRoom(room.id, socket.id, data.playerName, data.avatar);
           const updatedRoom = await gameService.getRoom(room.id);
           
           socket.join(room.id);
