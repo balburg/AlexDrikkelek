@@ -234,3 +234,58 @@ export async function nextTurn(roomId: string): Promise<GameRoom | null> {
   
   return room;
 }
+
+/**
+ * Remove player from room and handle host promotion if needed
+ */
+export async function removePlayer(roomId: string, playerId: string): Promise<GameRoom | null> {
+  const room = await getRoom(roomId);
+  if (!room) return null;
+  
+  const playerIndex = room.players.findIndex(p => p.id === playerId);
+  if (playerIndex === -1) return room;
+  
+  const wasHost = room.players[playerIndex].isHost;
+  
+  // Remove the player
+  room.players.splice(playerIndex, 1);
+  
+  // If no players left, we could delete the room, but for now just update
+  if (room.players.length === 0) {
+    await updateRoom(room);
+    return room;
+  }
+  
+  // If the removed player was the host, promote the oldest remaining player
+  if (wasHost) {
+    await promoteNewHost(room);
+  }
+  
+  // Adjust current turn if necessary
+  if (room.status === RoomStatus.PLAYING && room.players.length > 0) {
+    room.currentTurn = room.currentTurn % room.players.length;
+  }
+  
+  await updateRoom(room);
+  return room;
+}
+
+/**
+ * Promote the oldest player to host
+ */
+export async function promoteNewHost(room: GameRoom): Promise<void> {
+  if (room.players.length === 0) return;
+  
+  // Sort players by join time and promote the oldest
+  const oldestPlayer = room.players.reduce((oldest, player) => 
+    player.joinedAt < oldest.joinedAt ? player : oldest
+  );
+  
+  // Update all players' host status
+  room.players.forEach(p => {
+    p.isHost = p.id === oldestPlayer.id;
+  });
+  
+  // Update room host ID
+  room.hostId = oldestPlayer.id;
+}
