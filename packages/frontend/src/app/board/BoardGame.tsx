@@ -2,12 +2,15 @@
 
 import { useSocket } from '@/lib/SocketProvider';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { GameRoom, SocketEvent, Player } from '@/types/game';
 import Board from '@/components/Board';
 
 export default function BoardGame() {
   const { socket, isConnected } = useSocket();
-  const [roomCode, setRoomCode] = useState('');
+  const searchParams = useSearchParams();
+  const autoJoinCode = searchParams.get('autoJoin');
+  const [roomCode, setRoomCode] = useState(autoJoinCode || '');
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
   const [diceRoll, setDiceRoll] = useState<{ 
     playerName: string; 
@@ -81,6 +84,16 @@ export default function BoardGame() {
       socket.off('error');
     };
   }, [socket, gameRoom]);
+
+  // Auto-join room when autoJoin parameter is present
+  useEffect(() => {
+    if (socket && isConnected && autoJoinCode && !gameRoom) {
+      socket.emit(SocketEvent.JOIN_ROOM, { 
+        code: autoJoinCode.toUpperCase(), 
+        playerName: '📺 Board Display' 
+      });
+    }
+  }, [socket, isConnected, autoJoinCode, gameRoom]);
 
   const handleJoinRoom = () => {
     if (!socket || !roomCode) return;
