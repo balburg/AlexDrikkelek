@@ -227,7 +227,7 @@ export default function BoardGame() {
                 }`}
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center shadow-inner">
-                  <span className="text-3xl md:text-4xl">🎮</span>
+                  <span className="text-3xl md:text-4xl">{player.avatar || '🎮'}</span>
                 </div>
                 <p className="font-black text-white text-lg md:text-xl break-words">
                   {player.isHost && '👑 '}{player.name}
