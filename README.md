@@ -145,6 +145,7 @@ This will start:
 - ✅ Procedural board generation (unique every time)
 - ✅ Challenge system with categories and age ratings
 - ✅ Real-time dice rolls and player movements
+- ✅ Visual board display with player positions in real-time
 - ✅ Turn-based gameplay with automatic progression
 - ✅ Room management (create, join, leave)
 - ✅ Player avatars and customization
