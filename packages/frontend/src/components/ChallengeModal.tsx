@@ -63,13 +63,13 @@ export default function ChallengeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="card-game max-w-2xl w-full border-8 border-white animate-scale-in">
         {/* Header */}
-        <div className={`bg-gradient-to-r ${getChallengeColor()} p-6 -m-6 mb-6 rounded-t-2xl`}>
+        <div className={`bg-gradient-to-r ${getChallengeColor()} p-6 -m-6 mb-6 rounded-t-2xl shadow-2xl`}>
           <div className="text-center">
-            <div className="text-6xl mb-3">{getChallengeIcon()}</div>
-            <h2 className="text-4xl font-black text-white mb-2">
+            <div className="text-6xl mb-3 animate-bounce">{getChallengeIcon()}</div>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-2 drop-shadow-lg">
               {challenge.type} Challenge!
             </h2>
-            <p className="text-xl font-bold text-white/90">
+            <p className="text-xl md:text-2xl font-bold text-white/90 drop-shadow">
               {playerName}&apos;s Turn
             </p>
           </div>
@@ -107,16 +107,22 @@ export default function ChallengeModal({
           ) : (
             <>
               {/* Action/Dare/Drinking Challenge */}
-              <div className={`bg-gradient-to-br ${getChallengeColor()} bg-opacity-10 rounded-2xl p-8 border-4 border-current`}>
-                <p className="text-3xl font-black text-primary text-center">
-                  {challenge.action}
-                </p>
+              <div className={`bg-gradient-to-br ${getChallengeColor()} rounded-3xl p-10 border-8 border-white shadow-2xl animate-pulse-slow`}>
+                <div className="bg-white rounded-2xl p-8 shadow-inner">
+                  <p className="text-5xl md:text-6xl font-black text-primary text-center leading-tight">
+                    {challenge.action}
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-accent-yellow/20 rounded-xl p-4 border-2 border-accent-yellow">
-                <p className="text-center text-lg font-bold text-gray-700">
-                  Complete this challenge and click &quot;Done&quot; when ready!
-                </p>
+              <div className="bg-gradient-to-r from-accent-yellow to-accent-orange rounded-2xl p-6 border-4 border-white shadow-xl">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">👉</span>
+                  <p className="text-center text-2xl font-black text-white">
+                    Complete and click &quot;Done&quot;!
+                  </p>
+                  <span className="text-3xl">👈</span>
+                </div>
               </div>
             </>
           )}
