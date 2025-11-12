@@ -4,6 +4,7 @@ import { useSocket } from '@/lib/SocketProvider';
 import { useState, useEffect } from 'react';
 import { GameRoom, SocketEvent, Challenge, Tile, Player } from '@/types/game';
 import ChallengeModal from '@/components/ChallengeModal';
+import CastButton from '@/components/CastButton';
 import { AVATARS, getRandomAvatar } from '@/lib/avatars';
 
 export default function PlayerPage() {
@@ -277,7 +278,7 @@ export default function PlayerPage() {
       <div className="flex min-h-screen flex-col p-4 max-w-md mx-auto">
         {/* Compact Header */}
         <div className="bg-white rounded-2xl shadow-xl p-4 mb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs font-bold text-gray-500 uppercase">Game PIN</p>
               <p className="text-2xl font-black text-primary tracking-wider">{gameRoom.code}</p>
@@ -287,6 +288,11 @@ export default function PlayerPage() {
               <p className="text-2xl font-black text-primary">{gameRoom.players.length}/{gameRoom.maxPlayers}</p>
             </div>
           </div>
+          
+          {/* Cast Button - Only show for host */}
+          {myPlayer?.isHost && (
+            <CastButton roomCode={gameRoom.code} className="w-full" />
+          )}
         </div>
 
         {/* Current Player Indicator - Show who's turn it is */}

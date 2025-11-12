@@ -235,9 +235,9 @@ To create the most fun, accessible, and engaging online multiplayer board game p
 **Status**: 📋 Planned
 
 ### Chromecast Integration
-- [ ] Cast SDK implementation
-- [ ] Board display optimization
-- [ ] Connection management
+- [x] Cast SDK implementation (using Web Presentation API)
+- [x] Board display optimization
+- [x] Connection management
 
 ### PWA Features
 - [ ] Offline support
