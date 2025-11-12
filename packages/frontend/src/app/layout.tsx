@@ -1,5 +1,6 @@
 import '../styles/globals.css'
 import type { Metadata, Viewport } from 'next'
+import { SocketProvider } from '@/lib/SocketProvider'
 
 export const metadata: Metadata = {
   title: 'AlexDrikkelek - Fun Online Board Game! 🎲',
@@ -21,7 +22,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <SocketProvider>
+          {children}
+        </SocketProvider>
+      </body>
     </html>
   )
 }
