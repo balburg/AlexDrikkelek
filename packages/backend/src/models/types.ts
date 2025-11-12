@@ -89,6 +89,8 @@ export enum SocketEvent {
   JOIN_ROOM = 'join_room',
   LEAVE_ROOM = 'leave_room',
   ROOM_UPDATED = 'room_updated',
+  PLAYER_DISCONNECTED = 'player_disconnected',
+  HOST_CHANGED = 'host_changed',
   
   // Game Actions
   ROLL_DICE = 'roll_dice',

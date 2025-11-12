@@ -228,8 +228,55 @@ async function start() {
         }
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
         console.log('Client disconnected:', socket.id);
+        
+        // Find all rooms this socket is in
+        const rooms = Array.from(socket.rooms);
+        
+        for (const roomId of rooms) {
+          // Skip the default socket room (same as socket.id)
+          if (roomId === socket.id) continue;
+          
+          try {
+            const room = await gameService.getRoom(roomId);
+            if (!room) continue;
+            
+            const disconnectedPlayer = room.players.find(p => p.id === socket.id);
+            if (!disconnectedPlayer) continue;
+            
+            const wasHost = disconnectedPlayer.isHost;
+            const playerName = disconnectedPlayer.name;
+            
+            // Remove the player from the room
+            const updatedRoom = await gameService.removePlayer(roomId, socket.id);
+            
+            if (updatedRoom && updatedRoom.players.length > 0) {
+              // Notify remaining players
+              io.to(roomId).emit(SocketEvent.PLAYER_DISCONNECTED, {
+                playerId: socket.id,
+                playerName,
+              });
+              
+              // If host was removed and a new host was promoted, notify everyone
+              if (wasHost) {
+                const newHost = updatedRoom.players.find(p => p.isHost);
+                io.to(roomId).emit(SocketEvent.HOST_CHANGED, {
+                  newHostId: newHost?.id,
+                  newHostName: newHost?.name,
+                });
+                console.log(`Host disconnected from room ${updatedRoom.code}. New host: ${newHost?.name}`);
+              }
+              
+              // Broadcast updated room state
+              io.to(roomId).emit(SocketEvent.ROOM_UPDATED, updatedRoom);
+              
+              console.log(`Player ${playerName} removed from room ${updatedRoom.code}`);
+            }
+          } catch (error) {
+            console.error(`Error handling disconnect for room ${roomId}:`, error);
+          }
+        }
       });
     });
 

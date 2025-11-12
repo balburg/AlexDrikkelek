@@ -1,15 +1,27 @@
-import { generateRoomCode, generateBoard } from '../gameService';
-import { TileType } from '../../models/types';
+import { TileType, GameRoom, RoomStatus } from '../../models/types';
 
-// Mock Redis
+// Mock Redis - create a single mock instance
+const mockGet = jest.fn();
+const mockSetex = jest.fn();
+
 jest.mock('../../config/redis', () => ({
   getRedisClient: jest.fn(() => ({
-    setex: jest.fn(),
-    get: jest.fn(),
+    setex: mockSetex,
+    get: mockGet,
   })),
 }));
 
+import { 
+  generateRoomCode, 
+  generateBoard, 
+  removePlayer,
+  promoteNewHost,
+} from '../gameService';
+
 describe('gameService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   describe('generateRoomCode', () => {
     it('should generate a 6-character code', () => {
       const code = generateRoomCode();
@@ -82,6 +94,369 @@ describe('gameService', () => {
       const seed = 'test_seed_123';
       const board = generateBoard(seed, 50);
       expect(board.seed).toBe(seed);
+    });
+  });
+
+  describe('promoteNewHost', () => {
+    it('should promote the oldest player to host', async () => {
+      const mockRoom: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+          {
+            id: 'player3',
+            roomId: 'room1',
+            name: 'Charlie',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:02:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await promoteNewHost(mockRoom);
+
+      // Player1 (oldest) should be the new host
+      expect(mockRoom.players[0].isHost).toBe(true);
+      expect(mockRoom.players[1].isHost).toBe(false);
+      expect(mockRoom.players[2].isHost).toBe(false);
+      expect(mockRoom.hostId).toBe('player1');
+    });
+
+    it('should handle room with single player', async () => {
+      const mockRoom: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await promoteNewHost(mockRoom);
+
+      expect(mockRoom.players[0].isHost).toBe(true);
+      expect(mockRoom.hostId).toBe('player1');
+    });
+
+    it('should handle empty room', async () => {
+      const mockRoom: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await promoteNewHost(mockRoom);
+
+      // Should not throw and leave the room unchanged
+      expect(mockRoom.players).toHaveLength(0);
+    });
+  });
+
+  describe('removePlayer', () => {
+    beforeEach(() => {
+      mockGet.mockResolvedValue(null);
+      mockSetex.mockResolvedValue('OK');
+    });
+
+    it('should remove player and promote new host when host leaves', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+          {
+            id: 'player3',
+            roomId: 'room1',
+            name: 'Charlie',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:02:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Mock get to return the room data, then allow modifications
+      mockGet.mockImplementation((key: unknown) => {
+        if (key === 'room:room1') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
+
+      const updatedRoom = await removePlayer('room1', 'player1');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.players).toHaveLength(2);
+      expect(updatedRoom?.players.find(p => p.id === 'player1')).toBeUndefined();
+      
+      // Bob should be promoted to host (oldest remaining player)
+      const newHost = updatedRoom?.players.find(p => p.isHost);
+      expect(newHost?.id).toBe('player2');
+      expect(newHost?.name).toBe('Bob');
+      expect(updatedRoom?.hostId).toBe('player2');
+    });
+
+    it('should remove non-host player without promoting anyone', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockImplementation((key: unknown) => {
+        if (key === 'room:room1') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
+
+      const updatedRoom = await removePlayer('room1', 'player2');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.players).toHaveLength(1);
+      expect(updatedRoom?.players[0].id).toBe('player1');
+      expect(updatedRoom?.players[0].isHost).toBe(true);
+      expect(updatedRoom?.hostId).toBe('player1');
+    });
+
+    it('should adjust current turn when playing', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+          {
+            id: 'player3',
+            roomId: 'room1',
+            name: 'Charlie',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:02:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.PLAYING,
+        currentTurn: 2, // Charlie's turn
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockImplementation((key: unknown) => {
+        if (key === 'room:room1') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
+
+      const updatedRoom = await removePlayer('room1', 'player3');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.players).toHaveLength(2);
+      // currentTurn should be adjusted to be within valid range (0-1)
+      expect(updatedRoom?.currentTurn).toBeLessThan(2);
+      expect(updatedRoom?.currentTurn).toBe(0); // 2 % 2 = 0
+    });
+
+    it('should return room with no players if last player leaves', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockImplementation((key: unknown) => {
+        if (key === 'room:room1') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
+
+      const updatedRoom = await removePlayer('room1', 'player1');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.players).toHaveLength(0);
+    });
+
+    it('should return room unchanged if player not found', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockImplementation((key: unknown) => {
+        if (key === 'room:room1') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
+
+      const updatedRoom = await removePlayer('room1', 'nonexistent');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.players).toHaveLength(1);
+      expect(updatedRoom?.players[0].id).toBe('player1');
+    });
+
+    it('should return null if room not found', async () => {
+      mockGet.mockResolvedValue(null);
+
+      const updatedRoom = await removePlayer('nonexistent', 'player1');
+
+      expect(updatedRoom).toBeNull();
     });
   });
 });
