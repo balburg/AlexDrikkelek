@@ -226,20 +226,25 @@ Open http://localhost:3000 in your browser. You should see:
 
 1. Navigate to http://localhost:3000/player
 2. You should see the player interface
+3. Create a game and test the new code sharing features:
+   - **Copy Code** button: Click to copy room code to clipboard
+   - **Share** button: Test native sharing (works best on mobile)
 
 ### 4. Test Board View
 
 1. Navigate to http://localhost:3000/board
 2. You should see the game board display
+3. Enter a game code and test the **Copy Game Code** button
 
 ## Next Steps
 
 Now that you have the application running:
 
 1. **Learn How to Play**: Read the [User Guide](./User-Guide.md)
-2. **Understand the Architecture**: Check the [Architecture](./Architecture.md) docs
-3. **Start Development**: See the [Build and Run](./Build-and-Run.md) guide
-4. **Contribute**: Read the [Contributing](./Contributing.md) guidelines
+2. **Explore Features**: Check out the [Features Guide](./Features.md) for detailed feature documentation
+3. **Understand the Architecture**: Check the [Architecture](./Architecture.md) docs
+4. **Start Development**: See the [Build and Run](./Build-and-Run.md) guide
+5. **Contribute**: Read the [Contributing](./Contributing.md) guidelines
 
 ## Common Issues
 
@@ -292,4 +297,4 @@ For more troubleshooting help, see the [Troubleshooting Guide](./Troubleshooting
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 12-11-2025

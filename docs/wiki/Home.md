@@ -20,6 +20,7 @@ AlexDrikkelek is a progressive web application (PWA) that brings the classic boa
 ### 🎮 Game Features
 - **Dynamic Challenges**: Trivia questions, fun actions, and interactive tasks
 - **Multiplayer Support**: 2-10 players per room
+- **Easy Code Sharing**: One-tap copy and native share buttons for quick room code distribution
 - **Procedural Generation**: Every game board is unique
 - **Real-time Gameplay**: Synchronized game state across all devices
 - **Age-Appropriate Content**: Challenges tailored to different age groups
@@ -117,6 +118,7 @@ For detailed setup instructions, see [Getting Started](./Getting-Started.md).
 - ✅ Real-time dice rolls and player movements
 - ✅ Turn-based gameplay with automatic progression
 - ✅ Room management (create, join, leave)
+- ✅ Quick code sharing (copy & native share buttons)
 - ✅ Player avatars and customization
 - ✅ PWA-first approach for offline capabilities
 - ✅ Cross-device synchronization
@@ -138,4 +140,4 @@ For questions, bug reports, or feature requests:
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 12-11-2025

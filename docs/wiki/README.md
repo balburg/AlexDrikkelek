@@ -11,6 +11,7 @@ This directory contains all the documentation that is synced to the [GitHub Wiki
 ### Getting Started
 - **Getting-Started.md** - Installation and setup instructions
 - **User-Guide.md** - Complete user guide with screenshots
+- **Features.md** - Detailed feature documentation including code sharing
 
 ### Architecture & Development
 - **Architecture.md** - System architecture, tech stack, and design
@@ -141,4 +142,4 @@ For questions about documentation:
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 12-11-2025
