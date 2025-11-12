@@ -4,10 +4,12 @@ import { useSocket } from '@/lib/SocketProvider';
 import { useState, useEffect } from 'react';
 import { GameRoom, SocketEvent, Challenge, Tile, Player } from '@/types/game';
 import ChallengeModal from '@/components/ChallengeModal';
+import { AVATARS, getRandomAvatar } from '@/lib/avatars';
 
 export default function PlayerPage() {
   const { socket, isConnected } = useSocket();
   const [playerName, setPlayerName] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState(getRandomAvatar());
   const [roomCode, setRoomCode] = useState('');
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
   const [currentChallenge, setCurrentChallenge] = useState<{
@@ -107,12 +109,12 @@ export default function PlayerPage() {
 
   const handleCreateRoom = () => {
     if (!socket || !playerName) return;
-    socket.emit(SocketEvent.CREATE_ROOM, { playerName });
+    socket.emit(SocketEvent.CREATE_ROOM, { playerName, avatar: selectedAvatar });
   };
 
   const handleJoinRoom = () => {
     if (!socket || !playerName || !roomCode) return;
-    socket.emit(SocketEvent.JOIN_ROOM, { code: roomCode.toUpperCase(), playerName });
+    socket.emit(SocketEvent.JOIN_ROOM, { code: roomCode.toUpperCase(), playerName, avatar: selectedAvatar });
   };
 
   const handleStartGame = () => {
@@ -170,6 +172,31 @@ export default function PlayerPage() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-2xl p-6 space-y-5">
+            {/* Avatar Selection */}
+            <div>
+              <label className="block">
+                <span className="text-lg font-bold text-gray-700 mb-3 block text-center">
+                  Choose Your Avatar
+                </span>
+                <div className="grid grid-cols-5 gap-2 mb-2">
+                  {AVATARS.map((avatar) => (
+                    <button
+                      key={avatar}
+                      onClick={() => setSelectedAvatar(avatar)}
+                      className={`text-4xl p-3 rounded-xl border-4 transition-all transform hover:scale-110 ${
+                        selectedAvatar === avatar
+                          ? 'border-primary bg-accent-yellow shadow-lg scale-110'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      type="button"
+                    >
+                      {avatar}
+                    </button>
+                  ))}
+                </div>
+              </label>
+            </div>
+
             {/* Player Name Input */}
             <div>
               <label className="block">
@@ -344,9 +371,10 @@ export default function PlayerPage() {
               {gameRoom.players.map((player, index) => (
                 <div 
                   key={player.id}
-                  className="bg-gray-50 p-3 rounded-xl font-bold text-center"
+                  className="bg-gray-50 p-3 rounded-xl font-bold text-center flex items-center justify-center gap-2"
                 >
-                  {player.isHost && '👑 '}{player.name}
+                  {player.avatar && <span className="text-2xl">{player.avatar}</span>}
+                  <span>{player.isHost && '👑 '}{player.name}</span>
                 </div>
               ))}
             </div>

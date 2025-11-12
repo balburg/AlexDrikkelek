@@ -23,6 +23,7 @@ export interface Player {
   id: string;
   roomId: string;
   name: string;
+  avatar?: string;
   avatarUrl?: string;
   position: number;
   isHost: boolean;

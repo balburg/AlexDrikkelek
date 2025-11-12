@@ -64,7 +64,7 @@ export function generateBoard(seed: string, numTiles: number = 50): BoardState {
 /**
  * Create a new game room
  */
-export async function createRoom(hostId: string, hostName: string, maxPlayers: number = 10): Promise<GameRoom> {
+export async function createRoom(hostId: string, hostName: string, hostAvatar?: string, maxPlayers: number = 10): Promise<GameRoom> {
   const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const code = generateRoomCode();
   const seed = `${Date.now()}_${Math.random()}`;
@@ -73,6 +73,7 @@ export async function createRoom(hostId: string, hostName: string, maxPlayers: n
     id: hostId,
     roomId,
     name: hostName,
+    avatar: hostAvatar,
     position: 0,
     isHost: true,
     isConnected: true,
@@ -138,7 +139,7 @@ export async function updateRoom(room: GameRoom): Promise<void> {
 /**
  * Add a player to a room
  */
-export async function addPlayerToRoom(roomId: string, playerId: string, playerName: string): Promise<GameRoom | null> {
+export async function addPlayerToRoom(roomId: string, playerId: string, playerName: string, playerAvatar?: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room) return null;
   
@@ -162,6 +163,7 @@ export async function addPlayerToRoom(roomId: string, playerId: string, playerNa
     id: playerId,
     roomId,
     name: playerName,
+    avatar: playerAvatar,
     position: 0,
     isHost: false,
     isConnected: true,

@@ -95,12 +95,14 @@ export default function Board({ board, players }: BoardProps) {
                     return (
                       <div
                         key={player.id}
-                        className={`${playerColors[colorIndex]} w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white 
-                          shadow-lg flex items-center justify-center text-white text-[8px] md:text-xs font-bold 
-                          animate-bounce`}
+                        className={`${player.avatar ? 'bg-white' : playerColors[colorIndex]} 
+                          ${player.avatar ? 'w-6 h-6 md:w-7 md:h-7' : 'w-4 h-4 md:w-5 md:h-5'} 
+                          rounded-full border-2 border-white shadow-lg flex items-center justify-center 
+                          ${player.avatar ? 'text-xl md:text-2xl' : 'text-white text-[8px] md:text-xs'} 
+                          font-bold animate-bounce`}
                         title={player.name}
                       >
-                        {player.name.charAt(0).toUpperCase()}
+                        {player.avatar || player.name.charAt(0).toUpperCase()}
                       </div>
                     );
                   })}
@@ -161,9 +163,12 @@ export default function Board({ board, players }: BoardProps) {
               const colorIndex = index % playerColors.length;
               return (
                 <div key={player.id} className="flex items-center gap-2">
-                  <div className={`${playerColors[colorIndex]} w-6 h-6 rounded-full border-2 border-white shadow-md 
-                    flex items-center justify-center text-white text-xs font-bold`}>
-                    {player.name.charAt(0).toUpperCase()}
+                  <div className={`${player.avatar ? 'bg-white' : playerColors[colorIndex]} 
+                    ${player.avatar ? 'w-8 h-8' : 'w-6 h-6'} rounded-full border-2 
+                    ${player.avatar ? 'border-gray-300' : 'border-white'} shadow-md 
+                    flex items-center justify-center 
+                    ${player.avatar ? 'text-2xl' : 'text-white text-xs'} font-bold`}>
+                    {player.avatar || player.name.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm font-bold text-gray-700 truncate">
                     {player.isHost && '👑 '}{player.name}
