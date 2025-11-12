@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { GameRoom, SocketEvent, Challenge, Tile, Player } from '@/types/game';
 import ChallengeModal from '@/components/ChallengeModal';
 import CastButton from '@/components/CastButton';
+import QRCodeScanner from '@/components/QRCodeScanner';
 import { AVATARS, getRandomAvatar } from '@/lib/avatars';
 
 export default function PlayerPage() {
@@ -21,6 +22,7 @@ export default function PlayerPage() {
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [message, setMessage] = useState('');
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -116,6 +118,13 @@ export default function PlayerPage() {
   const handleJoinRoom = () => {
     if (!socket || !playerName || !roomCode) return;
     socket.emit(SocketEvent.JOIN_ROOM, { code: roomCode.toUpperCase(), playerName, avatar: selectedAvatar });
+  };
+
+  const handleQRCodeScanned = (scannedCode: string) => {
+    if (!socket || !playerName) return;
+    setRoomCode(scannedCode);
+    setShowQRScanner(false);
+    socket.emit(SocketEvent.JOIN_ROOM, { code: scannedCode.toUpperCase(), playerName, avatar: selectedAvatar });
   };
 
   const handleStartGame = () => {
@@ -259,6 +268,26 @@ export default function PlayerPage() {
                 <span className="block text-4xl mb-1">🚀</span>
                 Join Game
               </button>
+
+              {/* Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t-4 border-gray-300 rounded"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-5 text-lg font-black text-gray-500">OR</span>
+                </div>
+              </div>
+
+              {/* QR Scanner Button */}
+              <button 
+                onClick={() => setShowQRScanner(true)}
+                disabled={!playerName}
+                className="w-full btn-primary text-2xl py-5 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-xl bg-gradient-to-r from-accent-blue to-accent-green"
+              >
+                <span className="block text-4xl mb-1">📷</span>
+                Scan QR Code
+              </button>
             </div>
           </div>
 
@@ -395,6 +424,14 @@ export default function PlayerPage() {
           playerName={currentChallenge.playerName}
           onComplete={handleChallengeComplete}
           onClose={() => setCurrentChallenge(null)}
+        />
+      )}
+
+      {/* QR Code Scanner */}
+      {showQRScanner && (
+        <QRCodeScanner
+          onScan={handleQRCodeScanned}
+          onClose={() => setShowQRScanner(false)}
         />
       )}
     </main>

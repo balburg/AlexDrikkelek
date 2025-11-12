@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { GameRoom, SocketEvent, Player } from '@/types/game';
 import Board from '@/components/Board';
+import QRCodeDisplay from '@/components/QRCodeDisplay';
 
 export default function BoardGame() {
   const { socket, isConnected } = useSocket();
@@ -177,10 +178,19 @@ export default function BoardGame() {
           <h1 className="text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-2xl">
             🎪 Game Board 🎪
           </h1>
-          <div className="bg-gradient-to-r from-accent-yellow via-accent-orange to-accent-yellow p-2 rounded-3xl inline-block">
-            <p className="bg-white px-8 py-4 text-5xl md:text-6xl font-black text-primary tracking-wider rounded-2xl shadow-inner">
-              {gameRoom.code}
-            </p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            {/* Room Code Display */}
+            <div className="bg-gradient-to-r from-accent-yellow via-accent-orange to-accent-yellow p-2 rounded-3xl inline-block">
+              <p className="bg-white px-8 py-4 text-5xl md:text-6xl font-black text-primary tracking-wider rounded-2xl shadow-inner">
+                {gameRoom.code}
+              </p>
+            </div>
+            
+            {/* QR Code Display */}
+            <div className="bg-white p-4 rounded-3xl shadow-2xl">
+              <p className="text-sm font-bold text-gray-600 mb-2 text-center">Scan to Join</p>
+              <QRCodeDisplay roomCode={gameRoom.code} size={150} />
+            </div>
           </div>
         </div>
 
