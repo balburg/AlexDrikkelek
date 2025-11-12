@@ -2,6 +2,10 @@
 
 import { BoardState, Player, TileType } from '@/types/game';
 
+/**
+ * Board component - displays the game board with visual tiles and player positions
+ * Updates in real-time as players move
+ */
 interface BoardProps {
   board: BoardState;
   players: Player[];
