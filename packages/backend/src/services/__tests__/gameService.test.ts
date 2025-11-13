@@ -11,9 +11,14 @@ jest.mock('../../config/redis', () => ({
   })),
 }));
 
+// Mock customSpaceService
+jest.mock('../customSpaceService', () => ({
+  getActiveSpaces: jest.fn().mockResolvedValue([]),
+}));
+
 import { 
   generateRoomCode, 
-  generateBoard, 
+  generateBoardSync, 
   removePlayer,
   promoteNewHost,
   startGame,
@@ -45,25 +50,25 @@ describe('gameService', () => {
 
   describe('generateBoard', () => {
     it('should generate a board with correct number of tiles', () => {
-      const board = generateBoard('test_seed', 50);
+      const board = generateBoardSync('test_seed', 50);
       expect(board.tiles).toHaveLength(50);
     });
 
     it('should have START tile at position 0', () => {
-      const board = generateBoard('test_seed', 50);
+      const board = generateBoardSync('test_seed', 50);
       expect(board.tiles[0].type).toBe(TileType.START);
       expect(board.tiles[0].position).toBe(0);
     });
 
     it('should have FINISH tile at last position', () => {
-      const board = generateBoard('test_seed', 50);
+      const board = generateBoardSync('test_seed', 50);
       const lastTile = board.tiles[board.tiles.length - 1];
       expect(lastTile.type).toBe(TileType.FINISH);
       expect(lastTile.position).toBe(49);
     });
 
     it('should include special tiles (CHALLENGE, BONUS, PENALTY)', () => {
-      const board = generateBoard('test_seed', 50);
+      const board = generateBoardSync('test_seed', 50);
       const specialTiles = board.tiles.filter(
         t => t.type === TileType.CHALLENGE || 
              t.type === TileType.BONUS || 
@@ -73,7 +78,7 @@ describe('gameService', () => {
     });
 
     it('should assign challengeId to special tiles', () => {
-      const board = generateBoard('test_seed', 50);
+      const board = generateBoardSync('test_seed', 50);
       const specialTiles = board.tiles.filter(
         t => t.type === TileType.CHALLENGE || 
              t.type === TileType.BONUS || 
@@ -85,15 +90,15 @@ describe('gameService', () => {
     });
 
     it('should generate same board for same seed', () => {
-      const board1 = generateBoard('same_seed', 30);
-      const board2 = generateBoard('same_seed', 30);
+      const board1 = generateBoardSync('same_seed', 30);
+      const board2 = generateBoardSync('same_seed', 30);
       
       expect(board1.tiles).toEqual(board2.tiles);
     });
 
     it('should store seed in board state', () => {
       const seed = 'test_seed_123';
-      const board = generateBoard(seed, 50);
+      const board = generateBoardSync(seed, 50);
       expect(board.seed).toBe(seed);
     });
   });
@@ -136,7 +141,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -169,7 +174,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -189,7 +194,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -244,7 +249,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -298,7 +303,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -356,7 +361,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.PLAYING,
         currentTurn: 2, // Charlie's turn
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -396,7 +401,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -433,7 +438,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -495,7 +500,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -529,7 +534,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.WAITING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -567,7 +572,7 @@ describe('gameService', () => {
         maxPlayers: 10,
         status: RoomStatus.PLAYING,
         currentTurn: 0,
-        board: generateBoard('seed', 50),
+        board: generateBoardSync('seed', 50),
         createdAt: new Date(),
         updatedAt: new Date(),
       };

@@ -8,4 +8,7 @@ module.exports = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
   ],
+  moduleNameMapper: {
+    '^uuid$': '<rootDir>/node_modules/uuid/dist/index.js',
+  },
 };

@@ -1,5 +1,6 @@
-import { GameRoom, Player, BoardState, Tile, TileType, RoomStatus } from '../models/types';
+import { GameRoom, Player, BoardState, Tile, TileType, RoomStatus, CustomSpaceType } from '../models/types';
 import { getRedisClient } from '../config/redis';
+import * as customSpaceService from './customSpaceService';
 
 const redis = getRedisClient();
 
@@ -16,9 +17,90 @@ export function generateRoomCode(): string {
 }
 
 /**
- * Generate a procedural board based on a seed
+ * Map CustomSpaceType to TileType
  */
-export function generateBoard(seed: string, numTiles: number = 50): BoardState {
+function mapCustomSpaceTypeToTileType(customType: CustomSpaceType): TileType {
+  switch (customType) {
+    case CustomSpaceType.CHALLENGE:
+    case CustomSpaceType.QUIZ:
+    case CustomSpaceType.TRIVIA:
+      return TileType.CHALLENGE;
+    case CustomSpaceType.BONUS:
+      return TileType.BONUS;
+    case CustomSpaceType.PENALTY:
+      return TileType.PENALTY;
+    case CustomSpaceType.DRINKING:
+    case CustomSpaceType.ACTION:
+    case CustomSpaceType.DARE:
+    case CustomSpaceType.SPECIAL:
+      return TileType.CHALLENGE;
+    default:
+      return TileType.NORMAL;
+  }
+}
+
+/**
+ * Generate a procedural board based on a seed, optionally using custom spaces
+ */
+export async function generateBoard(seed: string, numTiles: number = 50): Promise<BoardState> {
+  const tiles: Tile[] = [];
+  
+  // Get active custom spaces
+  const customSpaces = await customSpaceService.getActiveSpaces();
+  const useCustomSpaces = customSpaces.length > 0;
+  
+  // Create tiles based on seed for reproducibility
+  for (let i = 0; i < numTiles; i++) {
+    let type: TileType = TileType.NORMAL;
+    let customSpaceId: string | undefined;
+    
+    if (i === 0) {
+      type = TileType.START;
+    } else if (i === numTiles - 1) {
+      type = TileType.FINISH;
+    } else {
+      // Use seed to determine tile types pseudo-randomly
+      const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0) * (i + 1), 0);
+      const random = (hash % 100) / 100;
+      
+      if (useCustomSpaces && random < 0.5) {
+        // Use a custom space
+        const spaceIndex = Math.floor((hash % customSpaces.length));
+        const customSpace = customSpaces[spaceIndex];
+        customSpaceId = customSpace.id;
+        type = mapCustomSpaceTypeToTileType(customSpace.type);
+      } else if (random < 0.3) {
+        type = TileType.CHALLENGE;
+      } else if (random < 0.4) {
+        type = TileType.BONUS;
+      } else if (random < 0.5) {
+        type = TileType.PENALTY;
+      } else {
+        type = TileType.NORMAL;
+      }
+    }
+    
+    tiles.push({
+      id: i,
+      position: i,
+      type,
+      challengeId: (type === TileType.CHALLENGE || type === TileType.BONUS || type === TileType.PENALTY) 
+        ? `challenge_${i}` 
+        : undefined,
+      customSpaceId,
+    });
+  }
+  
+  return {
+    tiles,
+    seed,
+  };
+}
+
+/**
+ * Generate a procedural board based on a seed (synchronous version for backwards compatibility)
+ */
+export function generateBoardSync(seed: string, numTiles: number = 50): BoardState {
   const tiles: Tile[] = [];
   
   // Create tiles based on seed for reproducibility
@@ -88,7 +170,7 @@ export async function createRoom(hostId: string, hostName: string, hostAvatar?: 
     maxPlayers,
     status: RoomStatus.WAITING,
     currentTurn: 0,
-    board: generateBoard(seed),
+    board: await generateBoard(seed),
     createdAt: new Date(),
     updatedAt: new Date(),
   };

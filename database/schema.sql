@@ -78,6 +78,39 @@ CREATE INDEX IX_Challenges_Type ON Challenges(Type);
 CREATE INDEX IX_Challenges_Category ON Challenges(Category);
 CREATE INDEX IX_Challenges_AgeRating ON Challenges(AgeRating);
 
+-- Custom Space Packs Table
+CREATE TABLE CustomSpacePacks (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    Name NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500),
+    IsActive BIT DEFAULT 0,
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+
+-- Custom Spaces Table
+CREATE TABLE CustomSpaces (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    PackId UNIQUEIDENTIFIER NOT NULL,
+    Name NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500),
+    Type NVARCHAR(20) NOT NULL,
+    LogoUrl NVARCHAR(500),
+    BackgroundUrl NVARCHAR(500),
+    ImageUrl NVARCHAR(500),
+    BackgroundColor NVARCHAR(20),
+    TextColor NVARCHAR(20),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    FOREIGN KEY (PackId) REFERENCES CustomSpacePacks(Id) ON DELETE CASCADE,
+    CHECK (Type IN ('CHALLENGE', 'DRINKING', 'QUIZ', 'TRIVIA', 'ACTION', 'DARE', 'BONUS', 'PENALTY', 'SPECIAL'))
+);
+
+-- Indexes for performance
+CREATE INDEX IX_CustomSpaces_PackId ON CustomSpaces(PackId);
+CREATE INDEX IX_CustomSpaces_Type ON CustomSpaces(Type);
+CREATE INDEX IX_CustomSpacePacks_IsActive ON CustomSpacePacks(IsActive);
+
 -- Sample Challenges Data
 INSERT INTO Challenges (Type, Category, AgeRating, Question, Answers, CorrectAnswer, Points)
 VALUES 

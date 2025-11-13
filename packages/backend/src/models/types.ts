@@ -42,6 +42,7 @@ export interface Tile {
   position: number;
   type: TileType;
   challengeId?: string;
+  customSpaceId?: string; // Reference to a custom space if applicable
 }
 
 export enum TileType {
