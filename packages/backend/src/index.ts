@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 import * as settingsService from './services/settingsService';
@@ -47,7 +47,7 @@ async function start() {
 
   fastify.put('/api/admin/settings', async (request, reply) => {
     try {
-      const updates = request.body as any;
+      const updates = request.body as Partial<GameSettings>;
       const settings = await settingsService.updateSettings(updates);
       return settings;
     } catch (error) {
