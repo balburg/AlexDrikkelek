@@ -75,12 +75,20 @@ Click or tap on **"Player View"** from the home page. You'll see the player inte
    - Share this PIN with other players so they can join
    - The game board will also need this PIN to connect
 
-4. **Wait for Players**
+4. **Share the Game PIN** (Host Only)
+   - Two convenient sharing options appear below the room code:
+     - **📋 Copy Code**: Copies the room code to your clipboard with one tap
+     - **📤 Share**: Uses your device's native share feature (on mobile) to share via messaging apps, email, or other apps
+   - Visual feedback shows "✓ Copied!" when successfully copied
+   - Share button falls back to copy function on desktop browsers
+   - These buttons only appear while waiting for players to join
+
+5. **Wait for Players**
    - As players join, you'll see them appear on your screen
    - Minimum 2 players required to start
    - Maximum 10 players supported
 
-5. **Start the Game**
+6. **Start the Game**
    - When ready, the host can start the game
    - All connected devices will be notified
 
@@ -141,7 +149,13 @@ Click or tap on **"Board View"** from the home page on your TV or large screen:
    - Click the 📺 **"Connect to Game"** button
    - The board will load and display the game
 
-3. **Board Display**
+3. **Copy Game Code** (During Waiting Phase)
+   - While waiting for players to join, a **"📋 Copy Game Code"** button appears below the room code
+   - Click it to copy the code to clipboard for easy sharing
+   - Visual feedback shows "✓ Code Copied!" when successful
+   - Button disappears once the game starts
+
+4. **Board Display**
    - Shows the complete game board with all tiles
    - Displays all player pieces at their current positions
    - Shows whose turn it is
@@ -308,10 +322,12 @@ While the current version focuses on racing to the finish, future updates may in
 
 ### For the Host
 
-1. **Share the PIN Clearly**: Write it down or display it prominently
-2. **Wait for Everyone**: Ensure all players have joined before starting
-3. **Set the Mood**: Use the TV display to create an immersive experience
-4. **Test Connection**: Do a quick test before the actual game night
+1. **Share the PIN Clearly**: Use the built-in copy or share buttons for quick sharing
+2. **Copy Button**: One-tap clipboard copy makes it easy to paste into messages
+3. **Share Button**: On mobile devices, instantly share via your favorite messaging app
+4. **Wait for Everyone**: Ensure all players have joined before starting
+5. **Set the Mood**: Use the TV display to create an immersive experience
+6. **Test Connection**: Do a quick test before the actual game night
 
 ### For the Board Display
 
@@ -415,4 +431,4 @@ For more information, see our Privacy Policy.
 - [FAQ Section](./FAQ.md) (Coming Soon)
 - [GitHub Issues](https://github.com/balburg/AlexDrikkelek/issues)
 
-**Last updated:** 12-11-2024
+**Last updated:** 12-11-2025

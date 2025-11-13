@@ -18,6 +18,18 @@ export default function BoardGame() {
     timestamp: number;
   } | null>(null);
   const [message, setMessage] = useState('');
+  const [showCopied, setShowCopied] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (!gameRoom) return;
+    try {
+      await navigator.clipboard.writeText(gameRoom.code);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -177,10 +189,20 @@ export default function BoardGame() {
           <h1 className="text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-2xl">
             🎪 Game Board 🎪
           </h1>
-          <div className="bg-gradient-to-r from-accent-yellow via-accent-orange to-accent-yellow p-2 rounded-3xl inline-block">
-            <p className="bg-white px-8 py-4 text-5xl md:text-6xl font-black text-primary tracking-wider rounded-2xl shadow-inner">
-              {gameRoom.code}
-            </p>
+          <div className="flex flex-col items-center gap-3">
+            <div className="bg-gradient-to-r from-accent-yellow via-accent-orange to-accent-yellow p-2 rounded-3xl inline-block">
+              <p className="bg-white px-8 py-4 text-5xl md:text-6xl font-black text-primary tracking-wider rounded-2xl shadow-inner">
+                {gameRoom.code}
+              </p>
+            </div>
+            {gameRoom.status === 'WAITING' && (
+              <button
+                onClick={handleCopyCode}
+                className="bg-white hover:bg-gray-100 text-primary font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl text-lg"
+              >
+                {showCopied ? '✓ Code Copied!' : '📋 Copy Game Code'}
+              </button>
+            )}
           </div>
         </div>
 

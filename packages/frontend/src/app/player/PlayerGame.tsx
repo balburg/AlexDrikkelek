@@ -21,6 +21,36 @@ export default function PlayerPage() {
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [message, setMessage] = useState('');
+  const [showCopied, setShowCopied] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (!gameRoom) return;
+    try {
+      await navigator.clipboard.writeText(gameRoom.code);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleShareCode = async () => {
+    if (!gameRoom) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Join my AlexDrikkelek game!',
+          text: `Join my game with code: ${gameRoom.code}`,
+          url: window.location.origin + '/player',
+        });
+      } else {
+        // Fallback to copy
+        handleCopyCode();
+      }
+    } catch (err) {
+      console.error('Failed to share:', err);
+    }
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -289,8 +319,29 @@ export default function PlayerPage() {
             </div>
           </div>
           
-          {/* Cast Button - Only show for host */}
-          {myPlayer?.isHost && (
+          {/* Share and Copy Buttons - Only show for host when waiting */}
+          {myPlayer?.isHost && gameRoom.status === 'WAITING' && (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyCode}
+                  className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg text-sm"
+                >
+                  {showCopied ? '✓ Copied!' : '📋 Copy Code'}
+                </button>
+                <button
+                  onClick={handleShareCode}
+                  className="flex-1 bg-accent-green hover:bg-accent-green/90 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg text-sm"
+                >
+                  📤 Share
+                </button>
+              </div>
+              <CastButton roomCode={gameRoom.code} className="w-full" />
+            </div>
+          )}
+          
+          {/* Cast Button only when playing */}
+          {myPlayer?.isHost && gameRoom.status !== 'WAITING' && (
             <CastButton roomCode={gameRoom.code} className="w-full" />
           )}
         </div>
