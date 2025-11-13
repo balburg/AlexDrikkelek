@@ -16,6 +16,7 @@ import {
   generateBoard, 
   removePlayer,
   promoteNewHost,
+  startGame,
 } from '../gameService';
 
 describe('gameService', () => {
@@ -455,6 +456,131 @@ describe('gameService', () => {
       mockGet.mockResolvedValue(null);
 
       const updatedRoom = await removePlayer('nonexistent', 'player1');
+
+      expect(updatedRoom).toBeNull();
+    });
+  });
+
+  describe('startGame', () => {
+    beforeEach(() => {
+      mockGet.mockResolvedValue(null);
+      mockSetex.mockResolvedValue('OK');
+    });
+
+    it('should start game with 2 players', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockResolvedValue(JSON.stringify(roomData));
+
+      const updatedRoom = await startGame('room1');
+
+      expect(updatedRoom).not.toBeNull();
+      expect(updatedRoom?.status).toBe(RoomStatus.PLAYING);
+      expect(updatedRoom?.currentTurn).toBe(0);
+      expect(mockSetex).toHaveBeenCalled();
+    });
+
+    it('should throw error when trying to start with only 1 player', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.WAITING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockResolvedValue(JSON.stringify(roomData));
+
+      await expect(startGame('room1')).rejects.toThrow('Need at least 2 players to start');
+    });
+
+    it('should throw error when game already started', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            roomId: 'room1',
+            name: 'Alice',
+            position: 0,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:00:00Z'),
+          },
+          {
+            id: 'player2',
+            roomId: 'room1',
+            name: 'Bob',
+            position: 0,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date('2024-01-01T10:01:00Z'),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.PLAYING,
+        currentTurn: 0,
+        board: generateBoard('seed', 50),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockResolvedValue(JSON.stringify(roomData));
+
+      await expect(startGame('room1')).rejects.toThrow('Game already started or finished');
+    });
+
+    it('should return null if room not found', async () => {
+      mockGet.mockResolvedValue(null);
+
+      const updatedRoom = await startGame('nonexistent');
 
       expect(updatedRoom).toBeNull();
     });

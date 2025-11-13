@@ -371,14 +371,27 @@ export default function PlayerPage() {
         {/* Main Action Area */}
         <div className="flex-1 flex flex-col justify-center">
           {gameRoom.status === 'WAITING' && myPlayer?.isHost && (
-            <button
-              onClick={handleStartGame}
-              disabled={gameRoom.players.length < 2}
-              className="w-full btn-primary text-3xl py-10 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl"
-            >
-              <span className="block text-5xl mb-2">🎮</span>
-              Start Game!
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={handleStartGame}
+                disabled={gameRoom.players.length < 2}
+                className="w-full btn-primary text-3xl py-10 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl"
+              >
+                <span className="block text-5xl mb-2">🎮</span>
+                Start Game!
+              </button>
+              {gameRoom.players.length < 2 && (
+                <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
+                  <p className="text-4xl mb-3">👥</p>
+                  <p className="text-xl font-bold text-gray-600">
+                    Need at least 2 players to start
+                  </p>
+                  <p className="text-lg font-semibold text-gray-500 mt-2">
+                    ({gameRoom.players.length}/2 players)
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {gameRoom.status === 'WAITING' && !myPlayer?.isHost && (
