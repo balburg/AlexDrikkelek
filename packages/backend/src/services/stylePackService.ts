@@ -87,13 +87,12 @@ const BUILT_IN_PACKS = [DEFAULT_STYLE_PACK, CHRISTMAS_STYLE_PACK, HALLOWEEN_STYL
  * Initialize default style packs if they don't exist
  */
 async function initializeDefaultPacks(): Promise<void> {
-  const existingPacks = await getAllStylePacks();
+  // Directly check Redis without calling getAllStylePacks to avoid recursion
+  const packsJson = await redis.get(STYLE_PACKS_KEY);
   
-  if (existingPacks.length === 0) {
-    // Save all built-in packs
-    for (const pack of BUILT_IN_PACKS) {
-      await saveStylePack(pack);
-    }
+  if (!packsJson) {
+    // Save all built-in packs directly
+    await saveAllStylePacks(BUILT_IN_PACKS);
     // Set default as active
     await redis.set(ACTIVE_STYLE_KEY, DEFAULT_STYLE_PACK.id);
   }
@@ -294,20 +293,4 @@ export async function deleteStylePack(id: string): Promise<void> {
  */
 async function saveAllStylePacks(packs: StylePack[]): Promise<void> {
   await redis.set(STYLE_PACKS_KEY, JSON.stringify(packs));
-}
-
-/**
- * Internal: Save a single style pack (used during initialization)
- */
-async function saveStylePack(pack: StylePack): Promise<void> {
-  const allPacks = await getAllStylePacks();
-  const existingIndex = allPacks.findIndex(p => p.id === pack.id);
-  
-  if (existingIndex >= 0) {
-    allPacks[existingIndex] = pack;
-  } else {
-    allPacks.push(pack);
-  }
-  
-  await saveAllStylePacks(allPacks);
 }
