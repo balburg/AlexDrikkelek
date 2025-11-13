@@ -7,6 +7,18 @@
     --foreground-rgb: 51, 51, 51;
     --background-start-rgb: 246, 248, 250;
     --background-end-rgb: 255, 255, 255;
+    
+    /* Default theme colors (will be overridden by ThemeProvider) */
+    --color-primary: #46178F;
+    --color-primary-light: #6938A5;
+    --color-primary-dark: #2D0E5A;
+    --color-secondary: #E21B3C;
+    --color-secondary-light: #FF4560;
+    --color-secondary-dark: #B31530;
+    --color-accent-blue: #1368CE;
+    --color-accent-orange: #FF8C1A;
+    --color-accent-green: #26890D;
+    --color-accent-yellow: #FFD602;
   }
 
   body {

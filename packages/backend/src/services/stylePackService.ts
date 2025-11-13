@@ -107,8 +107,8 @@ export async function getAllStylePacks(): Promise<StylePack[]> {
     const packsJson = await redis.get(STYLE_PACKS_KEY);
     
     if (packsJson) {
-      const packs = JSON.parse(packsJson);
-      return packs.map((pack: any) => ({
+      const packs = JSON.parse(packsJson) as Array<Omit<StylePack, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string }>;
+      return packs.map((pack) => ({
         ...pack,
         createdAt: new Date(pack.createdAt),
         updatedAt: new Date(pack.updatedAt),
