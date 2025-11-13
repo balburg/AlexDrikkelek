@@ -8,26 +8,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Kahoot-inspired vibrant, accessible color palette
+        // Dynamic theme colors using CSS custom properties
         primary: {
-          DEFAULT: '#46178F',  // Deep purple
-          light: '#6938A5',
-          dark: '#2D0E5A',
+          DEFAULT: 'var(--color-primary, #46178F)',
+          light: 'var(--color-primary-light, #6938A5)',
+          dark: 'var(--color-primary-dark, #2D0E5A)',
         },
         secondary: {
-          DEFAULT: '#E21B3C',  // Vibrant red
-          light: '#FF4560',
-          dark: '#B31530',
+          DEFAULT: 'var(--color-secondary, #E21B3C)',
+          light: 'var(--color-secondary-light, #FF4560)',
+          dark: 'var(--color-secondary-dark, #B31530)',
         },
         accent: {
-          blue: '#1368CE',     // Bright blue
-          orange: '#FF8C1A',   // Energetic orange
-          green: '#26890D',    // Fresh green
-          yellow: '#FFD602',   // Bright yellow
+          blue: 'var(--color-accent-blue, #1368CE)',
+          orange: 'var(--color-accent-orange, #FF8C1A)',
+          green: 'var(--color-accent-green, #26890D)',
+          yellow: 'var(--color-accent-yellow, #FFD602)',
         },
-        success: '#26890D',
-        danger: '#E21B3C',
-        warning: '#FF8C1A',
+        success: 'var(--color-accent-green, #26890D)',
+        danger: 'var(--color-secondary, #E21B3C)',
+        warning: 'var(--color-accent-orange, #FF8C1A)',
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],

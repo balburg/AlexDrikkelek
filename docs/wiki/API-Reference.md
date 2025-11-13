@@ -202,6 +202,241 @@ GET /api/challenges/random?type=trivia&ageRating=adults&difficulty=3
 
 ---
 
+### Get All Style Packs
+
+Retrieve all available style packs/themes.
+
+**Endpoint:** `GET /api/admin/style-packs`
+
+**Authentication:** Admin only
+
+**Response:**
+```json
+[
+  {
+    "id": "default",
+    "name": "Default",
+    "description": "Original AlexDrikkelek theme",
+    "isActive": true,
+    "isDefault": true,
+    "theme": {
+      "primary": "#8B5CF6",
+      "primaryLight": "#A78BFA",
+      "primaryDark": "#7C3AED",
+      "secondary": "#EC4899",
+      "secondaryLight": "#F472B6",
+      "secondaryDark": "#DB2777",
+      "accentBlue": "#3B82F6",
+      "accentOrange": "#F97316",
+      "accentGreen": "#10B981",
+      "accentYellow": "#EAB308"
+    },
+    "createdAt": "2024-11-01T00:00:00.000Z",
+    "updatedAt": "2024-11-01T00:00:00.000Z"
+  }
+]
+```
+
+**Status Codes:**
+- `200 OK`: Style packs retrieved successfully
+- `401 Unauthorized`: Not authenticated as admin
+
+---
+
+### Get Active Style Pack
+
+Retrieve the currently active style pack.
+
+**Endpoint:** `GET /api/admin/style-packs/active`
+
+**Authentication:** Admin only
+
+**Response:**
+```json
+{
+  "id": "christmas",
+  "name": "Christmas",
+  "description": "Festive red and green holiday theme",
+  "isActive": true,
+  "isDefault": true,
+  "theme": {
+    "primary": "#C41E3A",
+    "primaryLight": "#DC143C",
+    "primaryDark": "#A00020",
+    "secondary": "#0F8B3C",
+    "secondaryLight": "#10A54A",
+    "secondaryDark": "#0C6B2F",
+    "accentBlue": "#2C5F8D",
+    "accentOrange": "#D4AF37",
+    "accentGreen": "#228B22",
+    "accentYellow": "#FFD700"
+  },
+  "createdAt": "2024-11-01T00:00:00.000Z",
+  "updatedAt": "2024-11-12T10:00:00.000Z"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Active style pack retrieved
+- `404 Not Found`: No active style pack found
+- `401 Unauthorized`: Not authenticated as admin
+
+---
+
+### Get Current Theme (Public)
+
+Public endpoint to retrieve the currently active theme colors.
+
+**Endpoint:** `GET /api/theme`
+
+**Authentication:** None (public endpoint)
+
+**Response:**
+```json
+{
+  "name": "Christmas",
+  "theme": {
+    "primary": "#C41E3A",
+    "primaryLight": "#DC143C",
+    "primaryDark": "#A00020",
+    "secondary": "#0F8B3C",
+    "secondaryLight": "#10A54A",
+    "secondaryDark": "#0C6B2F",
+    "accentBlue": "#2C5F8D",
+    "accentOrange": "#D4AF37",
+    "accentGreen": "#228B22",
+    "accentYellow": "#FFD700"
+  }
+}
+```
+
+**Status Codes:**
+- `200 OK`: Theme retrieved successfully
+
+---
+
+### Create Style Pack
+
+Create a new custom style pack.
+
+**Endpoint:** `POST /api/admin/style-packs`
+
+**Authentication:** Admin only
+
+**Request Body:**
+```json
+{
+  "name": "Summer Vibes",
+  "description": "Bright and sunny theme for summer",
+  "theme": {
+    "primary": "#FF6B35",
+    "primaryLight": "#FF8C61",
+    "primaryDark": "#E65A2E",
+    "secondary": "#F7B801",
+    "secondaryLight": "#FFCA28",
+    "secondaryDark": "#D89E01",
+    "accentBlue": "#1E90FF",
+    "accentOrange": "#FF7F50",
+    "accentGreen": "#32CD32",
+    "accentYellow": "#FFD700"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "name": "Summer Vibes",
+  "description": "Bright and sunny theme for summer",
+  "isActive": false,
+  "isDefault": false,
+  "theme": { ... },
+  "createdAt": "2024-11-12T10:00:00.000Z",
+  "updatedAt": "2024-11-12T10:00:00.000Z"
+}
+```
+
+**Status Codes:**
+- `201 Created`: Style pack created successfully
+- `400 Bad Request`: Invalid input (missing fields or invalid color codes)
+- `401 Unauthorized`: Not authenticated as admin
+
+**Validation:**
+- Name: Required, 1-100 characters
+- Description: Required, 1-500 characters
+- Theme colors: All 10 colors required in hex format (#RRGGBB)
+
+---
+
+### Activate Style Pack
+
+Activate a specific style pack.
+
+**Endpoint:** `POST /api/admin/style-packs/:id/activate`
+
+**Authentication:** Admin only
+
+**Parameters:**
+- `id` (path): Style pack ID (e.g., "christmas", "uuid")
+
+**Response:**
+```json
+{
+  "id": "christmas",
+  "name": "Christmas",
+  "description": "Festive red and green holiday theme",
+  "isActive": true,
+  "isDefault": true,
+  "theme": { ... },
+  "createdAt": "2024-11-01T00:00:00.000Z",
+  "updatedAt": "2024-11-12T10:00:00.000Z"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Style pack activated successfully
+- `404 Not Found`: Style pack with given ID doesn't exist
+- `401 Unauthorized`: Not authenticated as admin
+
+**Behavior:**
+- Deactivates previously active style pack
+- Activates the specified style pack
+- Theme changes apply immediately across the application
+
+---
+
+### Delete Style Pack
+
+Delete a custom style pack.
+
+**Endpoint:** `DELETE /api/admin/style-packs/:id`
+
+**Authentication:** Admin only
+
+**Parameters:**
+- `id` (path): Style pack ID (must be a custom theme)
+
+**Response:**
+```json
+{
+  "message": "Style pack deleted successfully"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Style pack deleted successfully
+- `400 Bad Request`: Cannot delete built-in theme or active theme
+- `404 Not Found`: Style pack with given ID doesn't exist
+- `401 Unauthorized`: Not authenticated as admin
+
+**Protection:**
+- Cannot delete built-in themes (Default, Christmas, Halloween)
+- Cannot delete currently active theme (activate another first)
+- Only custom themes can be deleted
+
+---
+
 ## WebSocket Events
 
 WebSocket connection established via Socket.IO at the same base URL.
@@ -810,4 +1045,4 @@ socket.on('dice_rolled', (data) => {
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 13-11-2025

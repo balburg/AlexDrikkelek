@@ -30,6 +30,12 @@ AlexDrikkelek is a progressive web application (PWA) that brings the classic boa
 - **TV/Big Screen** → Board display for shared gameplay experience
 - **Chromecast Support** → Cast the board to your TV
 
+### 🎨 Admin Features
+- **Style Pack Management**: Customize the visual theme with built-in or custom color schemes
+- **Theme Library**: Choose from Default, Christmas, and Halloween themes
+- **Dynamic Theming**: Switch themes instantly without restarting
+- **Custom Theme Creator**: Design unlimited custom themes with 10+ colors
+
 ### 🏗️ Technology Stack
 
 **Frontend:**
@@ -120,6 +126,7 @@ For detailed setup instructions, see [Getting Started](./Getting-Started.md).
 - ✅ Room management (create, join, leave)
 - ✅ Quick code sharing (copy & native share buttons)
 - ✅ Player avatars and customization
+- ✅ Style Pack Management (admin theme customization)
 - ✅ PWA-first approach for offline capabilities
 - ✅ Cross-device synchronization
 - ✅ Responsive design (mobile, tablet, desktop, TV)
@@ -140,4 +147,4 @@ For questions, bug reports, or feature requests:
 
 ---
 
-**Last updated:** 12-11-2025
+**Last updated:** 13-11-2025
