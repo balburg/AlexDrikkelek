@@ -167,11 +167,14 @@ export default function Board({ board, players }: BoardProps) {
                     ${player.avatar ? 'w-8 h-8' : 'w-6 h-6'} rounded-full border-2 
                     ${player.avatar ? 'border-gray-300' : 'border-white'} shadow-md 
                     flex items-center justify-center 
-                    ${player.avatar ? 'text-2xl' : 'text-white text-xs'} font-bold`}>
+                    ${player.avatar ? 'text-2xl' : 'text-white text-xs'} font-bold
+                    ${!player.isConnected ? 'opacity-50 grayscale' : ''}`}>
                     {player.avatar || player.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm font-bold text-gray-700 truncate">
-                    {player.isHost && '👑 '}{player.name}
+                  <span className={`text-sm font-bold truncate ${!player.isConnected ? 'text-gray-400' : 'text-gray-700'}`}>
+                    {player.isHost && '👑 '}
+                    {player.name}
+                    {!player.isConnected && ' 🔌'}
                   </span>
                 </div>
               );
