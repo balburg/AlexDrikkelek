@@ -39,9 +39,10 @@ async function start() {
   fastify.get('/api/admin/settings', async (request, reply) => {
     try {
       const settings = await settingsService.getSettings();
+      reply.type('application/json');
       return settings;
     } catch (error) {
-      reply.code(500).send({ error: 'Failed to get settings' });
+      reply.code(500).type('application/json').send({ error: 'Failed to get settings' });
     }
   });
 
@@ -49,19 +50,21 @@ async function start() {
     try {
       const updates = request.body as Partial<GameSettings>;
       const settings = await settingsService.updateSettings(updates);
+      reply.type('application/json');
       return settings;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update settings';
-      reply.code(400).send({ error: message });
+      reply.code(400).type('application/json').send({ error: message });
     }
   });
 
   fastify.post('/api/admin/settings/reset', async (request, reply) => {
     try {
       const settings = await settingsService.resetSettings();
+      reply.type('application/json');
       return settings;
     } catch (error) {
-      reply.code(500).send({ error: 'Failed to reset settings' });
+      reply.code(500).type('application/json').send({ error: 'Failed to reset settings' });
     }
   });
 
