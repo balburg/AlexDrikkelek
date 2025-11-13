@@ -81,6 +81,16 @@ export default function Home() {
             ✨ Get ready for an epic game night! ✨
           </p>
         </div>
+
+        {/* Admin Link */}
+        <div className="mt-8 text-center">
+          <a
+            href="/admin"
+            className="inline-block text-white/80 text-sm font-semibold hover:text-white hover:underline transition-all"
+          >
+            🔧 Admin Settings
+          </a>
+        </div>
       </div>
     </main>
   )

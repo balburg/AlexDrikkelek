@@ -2,9 +2,10 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
+import * as settingsService from './services/settingsService';
 
 dotenv.config();
 
@@ -32,6 +33,39 @@ async function start() {
   // API routes
   fastify.get('/api/ping', async () => {
     return { message: 'pong' };
+  });
+
+  // Settings routes (Admin)
+  fastify.get('/api/admin/settings', async (request, reply) => {
+    try {
+      const settings = await settingsService.getSettings();
+      reply.type('application/json');
+      return settings;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get settings' });
+    }
+  });
+
+  fastify.put('/api/admin/settings', async (request, reply) => {
+    try {
+      const updates = request.body as Partial<GameSettings>;
+      const settings = await settingsService.updateSettings(updates);
+      reply.type('application/json');
+      return settings;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update settings';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.post('/api/admin/settings/reset', async (request, reply) => {
+    try {
+      const settings = await settingsService.resetSettings();
+      reply.type('application/json');
+      return settings;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to reset settings' });
+    }
   });
 
   // Start the server

@@ -109,3 +109,22 @@ export enum SocketEvent {
   GAME_STARTED = 'game_started',
   GAME_ENDED = 'game_ended',
 }
+
+// Admin Settings Types
+export interface GameSettings {
+  maxPlayersPerRoom: number;
+  defaultBoardSize: number;
+  enableChallenges: boolean;
+  challengeDifficulty: ChallengeDifficulty;
+  turnTimeoutSeconds: number;
+  allowLateJoin: boolean;
+  minPlayersToStart: number;
+  updatedAt: Date;
+}
+
+export enum ChallengeDifficulty {
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD',
+  MIXED = 'MIXED',
+}
