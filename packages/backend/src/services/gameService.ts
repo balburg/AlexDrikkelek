@@ -1,6 +1,7 @@
 import { GameRoom, Player, BoardState, Tile, TileType, RoomStatus, CustomSpaceType } from '../models/types';
 import { getRedisClient } from '../config/redis';
 import * as customSpaceService from './customSpaceService';
+import { v4 as uuidv4 } from 'uuid';
 
 const redis = getRedisClient();
 
@@ -150,9 +151,11 @@ export async function createRoom(hostId: string, hostName: string, hostAvatar?: 
   const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const code = generateRoomCode();
   const seed = `${Date.now()}_${Math.random()}`;
+  const playerSessionId = uuidv4();
   
   const host: Player = {
     id: hostId,
+    playerSessionId,
     roomId,
     name: hostName,
     avatar: hostAvatar,
@@ -178,6 +181,8 @@ export async function createRoom(hostId: string, hostName: string, hostAvatar?: 
   // Store in Redis
   await redis.setex(`room:${roomId}`, 3600 * 4, JSON.stringify(room)); // 4 hour expiry
   await redis.setex(`room:code:${code}`, 3600 * 4, roomId);
+  // Store player session mapping
+  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: hostId }));
   
   return room;
 }
@@ -241,8 +246,11 @@ export async function addPlayerToRoom(roomId: string, playerId: string, playerNa
     return room;
   }
   
+  const playerSessionId = uuidv4();
+  
   const player: Player = {
     id: playerId,
+    playerSessionId,
     roomId,
     name: playerName,
     avatar: playerAvatar,
@@ -254,6 +262,9 @@ export async function addPlayerToRoom(roomId: string, playerId: string, playerNa
   
   room.players.push(player);
   await updateRoom(room);
+  
+  // Store player session mapping
+  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId }));
   
   return room;
 }
@@ -317,6 +328,55 @@ export async function nextTurn(roomId: string): Promise<GameRoom | null> {
   await updateRoom(room);
   
   return room;
+}
+
+/**
+ * Mark player as disconnected but keep them in the room
+ */
+export async function markPlayerDisconnected(roomId: string, playerId: string): Promise<GameRoom | null> {
+  const room = await getRoom(roomId);
+  if (!room) return null;
+  
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) return room;
+  
+  player.isConnected = false;
+  player.lastDisconnectedAt = new Date();
+  
+  await updateRoom(room);
+  return room;
+}
+
+/**
+ * Reconnect a player to their previous session
+ */
+export async function reconnectPlayer(
+  playerSessionId: string,
+  newSocketId: string
+): Promise<{ room: GameRoom; player: Player } | null> {
+  // Get session data
+  const sessionData = await redis.get(`session:${playerSessionId}`);
+  if (!sessionData) return null;
+  
+  const { roomId } = JSON.parse(sessionData);
+  const room = await getRoom(roomId);
+  if (!room) return null;
+  
+  // Find player by session ID
+  const player = room.players.find(p => p.playerSessionId === playerSessionId);
+  if (!player) return null;
+  
+  // Update player's socket ID and mark as connected
+  player.id = newSocketId;
+  player.isConnected = true;
+  player.lastDisconnectedAt = undefined;
+  
+  await updateRoom(room);
+  
+  // Update session mapping
+  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: newSocketId }));
+  
+  return { room, player };
 }
 
 /**

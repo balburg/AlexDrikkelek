@@ -20,7 +20,8 @@ export enum RoomStatus {
 
 // Player Types
 export interface Player {
-  id: string;
+  id: string; // Socket ID (changes on reconnect)
+  playerSessionId: string; // Persistent player identifier across reconnections
   roomId: string;
   name: string;
   avatar?: string;
@@ -29,6 +30,7 @@ export interface Player {
   isHost: boolean;
   isConnected: boolean;
   joinedAt: Date;
+  lastDisconnectedAt?: Date;
 }
 
 // Board Types
@@ -85,6 +87,8 @@ export enum SocketEvent {
   // Connection
   CONNECT = 'connect',
   DISCONNECT = 'disconnect',
+  RECONNECT = 'reconnect_player',
+  PLAYER_RECONNECTED = 'player_reconnected',
   
   // Room Management
   CREATE_ROOM = 'create_room',

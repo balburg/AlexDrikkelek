@@ -40,6 +40,22 @@ export default function BoardGame() {
       setMessage('Room updated!');
     });
 
+    // Listen for player reconnection
+    socket.on(SocketEvent.PLAYER_RECONNECTED, (data: any) => {
+      if (data.playerName) {
+        setMessage(`${data.playerName} reconnected! 🔄`);
+      }
+    });
+
+    // Listen for player disconnections
+    socket.on(SocketEvent.PLAYER_DISCONNECTED, (data: { playerName: string; temporary: boolean }) => {
+      if (data.temporary) {
+        setMessage(`${data.playerName} disconnected (reconnecting...)`);
+      } else {
+        setMessage(`${data.playerName} left the game`);
+      }
+    });
+
     // Listen for game start
     socket.on(SocketEvent.GAME_STARTED, (room: GameRoom) => {
       setGameRoom(room);
@@ -89,6 +105,8 @@ export default function BoardGame() {
 
     return () => {
       socket.off(SocketEvent.ROOM_UPDATED);
+      socket.off(SocketEvent.PLAYER_RECONNECTED);
+      socket.off(SocketEvent.PLAYER_DISCONNECTED);
       socket.off(SocketEvent.GAME_STARTED);
       socket.off(SocketEvent.DICE_ROLLED);
       socket.off(SocketEvent.PLAYER_MOVED);

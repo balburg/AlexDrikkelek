@@ -16,6 +16,11 @@ jest.mock('../customSpaceService', () => ({
   getActiveSpaces: jest.fn().mockResolvedValue([]),
 }));
 
+// Mock uuid
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid'),
+}));
+
 import { 
   generateRoomCode, 
   generateBoardSync, 
@@ -112,6 +117,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -121,6 +127,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
@@ -130,6 +137,7 @@ describe('gameService', () => {
           },
           {
             id: 'player3',
+            playerSessionId: 'session3',
             roomId: 'room1',
             name: 'Charlie',
             position: 0,
@@ -163,6 +171,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -220,6 +229,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -229,6 +239,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
@@ -238,6 +249,7 @@ describe('gameService', () => {
           },
           {
             id: 'player3',
+            playerSessionId: 'session3',
             roomId: 'room1',
             name: 'Charlie',
             position: 0,
@@ -283,6 +295,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -292,6 +305,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
@@ -332,6 +346,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -341,6 +356,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
@@ -350,6 +366,7 @@ describe('gameService', () => {
           },
           {
             id: 'player3',
+            playerSessionId: 'session3',
             roomId: 'room1',
             name: 'Charlie',
             position: 0,
@@ -390,6 +407,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -427,6 +445,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -480,6 +499,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -489,6 +509,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
@@ -523,6 +544,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -552,6 +574,7 @@ describe('gameService', () => {
         players: [
           {
             id: 'player1',
+            playerSessionId: 'session1',
             roomId: 'room1',
             name: 'Alice',
             position: 0,
@@ -561,6 +584,7 @@ describe('gameService', () => {
           },
           {
             id: 'player2',
+            playerSessionId: 'session2',
             roomId: 'room1',
             name: 'Bob',
             position: 0,
