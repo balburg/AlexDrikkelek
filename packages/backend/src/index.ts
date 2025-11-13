@@ -2,11 +2,12 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 import * as settingsService from './services/settingsService';
 import * as stylePackService from './services/stylePackService';
+import * as customSpaceService from './services/customSpaceService';
 
 dotenv.config();
 
@@ -166,6 +167,168 @@ async function start() {
       return { theme: pack.theme, name: pack.name };
     } catch (error) {
       reply.code(500).type('application/json').send({ error: 'Failed to get theme' });
+    }
+  });
+
+  // Custom Space Pack routes (Admin)
+  fastify.get('/api/admin/custom-space-packs', async (request, reply) => {
+    try {
+      const packs = await customSpaceService.getAllPacks();
+      reply.type('application/json');
+      return packs;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get custom space packs' });
+    }
+  });
+
+  fastify.get('/api/admin/custom-space-packs/active', async (request, reply) => {
+    try {
+      const packs = await customSpaceService.getActivePacks();
+      reply.type('application/json');
+      return packs;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get active custom space packs' });
+    }
+  });
+
+  fastify.get('/api/admin/custom-space-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const pack = await customSpaceService.getPackById(id);
+      if (!pack) {
+        reply.code(404).type('application/json').send({ error: 'Custom space pack not found' });
+        return;
+      }
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get custom space pack' });
+    }
+  });
+
+  fastify.post('/api/admin/custom-space-packs', async (request, reply) => {
+    try {
+      const { name, description, isActive } = request.body as {
+        name: string;
+        description: string;
+        isActive?: boolean;
+      };
+      const pack = await customSpaceService.createPack(name, description, isActive);
+      reply.code(201).type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create custom space pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.put('/api/admin/custom-space-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const updates = request.body as Partial<{ name: string; description: string; isActive: boolean }>;
+      const pack = await customSpaceService.updatePack(id, updates);
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update custom space pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.post('/api/admin/custom-space-packs/:id/toggle', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { isActive } = request.body as { isActive: boolean };
+      const pack = await customSpaceService.togglePackActivation(id, isActive);
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to toggle custom space pack activation';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.delete('/api/admin/custom-space-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      await customSpaceService.deletePack(id);
+      reply.code(204).send();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete custom space pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  // Custom Space routes (Admin)
+  fastify.post('/api/admin/custom-space-packs/:packId/spaces', async (request, reply) => {
+    try {
+      const { packId } = request.params as { packId: string };
+      const { name, description, type, logoUrl, backgroundUrl, imageUrl, backgroundColor, textColor } = request.body as {
+        name: string;
+        description: string;
+        type: CustomSpaceType;
+        logoUrl?: string;
+        backgroundUrl?: string;
+        imageUrl?: string;
+        backgroundColor?: string;
+        textColor?: string;
+      };
+      const space = await customSpaceService.createSpace(packId, name, description, type, {
+        logoUrl,
+        backgroundUrl,
+        imageUrl,
+        backgroundColor,
+        textColor,
+      });
+      reply.code(201).type('application/json');
+      return space;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create custom space';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.put('/api/admin/custom-spaces/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const updates = request.body as Partial<{
+        name: string;
+        description: string;
+        type: CustomSpaceType;
+        logoUrl: string;
+        backgroundUrl: string;
+        imageUrl: string;
+        backgroundColor: string;
+        textColor: string;
+      }>;
+      const space = await customSpaceService.updateSpace(id, updates);
+      reply.type('application/json');
+      return space;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update custom space';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.delete('/api/admin/custom-spaces/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      await customSpaceService.deleteSpace(id);
+      reply.code(204).send();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete custom space';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  // Public route to get active custom spaces
+  fastify.get('/api/custom-spaces/active', async (request, reply) => {
+    try {
+      const spaces = await customSpaceService.getActiveSpaces();
+      reply.type('application/json');
+      return spaces;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get active custom spaces' });
     }
   });
 
