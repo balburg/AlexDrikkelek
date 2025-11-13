@@ -2,10 +2,11 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType, GameSettings } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 import * as settingsService from './services/settingsService';
+import * as stylePackService from './services/stylePackService';
 
 dotenv.config();
 
@@ -67,6 +68,107 @@ async function start() {
       reply.code(500).type('application/json').send({ error: 'Failed to reset settings' });
     }
   });
+
+  // Style Pack routes (Admin)
+  fastify.get('/api/admin/style-packs', async (request, reply) => {
+    try {
+      const packs = await stylePackService.getAllStylePacks();
+      reply.type('application/json');
+      return packs;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get style packs' });
+    }
+  });
+
+  fastify.get('/api/admin/style-packs/active', async (request, reply) => {
+    try {
+      const pack = await stylePackService.getActiveStylePack();
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get active style pack' });
+    }
+  });
+
+  fastify.get('/api/admin/style-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const pack = await stylePackService.getStylePackById(id);
+      if (!pack) {
+        reply.code(404).type('application/json').send({ error: 'Style pack not found' });
+        return;
+      }
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get style pack' });
+    }
+  });
+
+  fastify.post('/api/admin/style-packs', async (request, reply) => {
+    try {
+      const { name, description, theme, previewImage } = request.body as {
+        name: string;
+        description: string;
+        theme: StyleTheme;
+        previewImage?: string;
+      };
+      const pack = await stylePackService.createStylePack(name, description, theme, previewImage);
+      reply.code(201).type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create style pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.put('/api/admin/style-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const updates = request.body as Partial<{ name: string; description: string; theme: StyleTheme; previewImage: string }>;
+      const pack = await stylePackService.updateStylePack(id, updates);
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update style pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.post('/api/admin/style-packs/:id/activate', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const pack = await stylePackService.activateStylePack(id);
+      reply.type('application/json');
+      return pack;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to activate style pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.delete('/api/admin/style-packs/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      await stylePackService.deleteStylePack(id);
+      reply.code(204).send();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete style pack';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  // Public route to get active theme
+  fastify.get('/api/theme', async (request, reply) => {
+    try {
+      const pack = await stylePackService.getActiveStylePack();
+      reply.type('application/json');
+      return { theme: pack.theme, name: pack.name };
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get theme' });
+    }
+  });
+
 
   // Start the server
   try {

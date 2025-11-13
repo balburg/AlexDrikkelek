@@ -299,13 +299,23 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Back to Home */}
-          <div className="mt-6 text-center">
-            <a
-              href="/"
-              className="inline-block text-primary font-bold text-lg hover:text-accent-blue transition-colors"
-            >
-              ← Back to Home
-            </a>
+          <div className="mt-6 text-center space-y-3">
+            <div>
+              <a
+                href="/admin/styles"
+                className="inline-block text-white bg-accent-orange px-6 py-3 rounded-full font-bold text-lg hover:bg-orange-600 transition-colors shadow-game"
+              >
+                🎨 Manage Style Packs
+              </a>
+            </div>
+            <div>
+              <a
+                href="/"
+                className="inline-block text-primary font-bold text-lg hover:text-accent-blue transition-colors"
+              >
+                ← Back to Home
+              </a>
+            </div>
           </div>
 
           {/* Last Updated */}

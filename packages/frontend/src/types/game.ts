@@ -128,3 +128,31 @@ export enum ChallengeDifficulty {
   HARD = 'HARD',
   MIXED = 'MIXED',
 }
+
+// Style Pack Types
+export interface StylePack {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  isDefault: boolean;
+  theme: StyleTheme;
+  previewImage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StyleTheme {
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  secondary: string;
+  secondaryLight: string;
+  secondaryDark: string;
+  accentBlue: string;
+  accentOrange: string;
+  accentGreen: string;
+  accentYellow: string;
+  background?: string;
+  pattern?: string;
+}
