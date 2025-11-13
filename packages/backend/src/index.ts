@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType } from './models/types';
+import { SocketEvent, TileType, ChallengeType } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 
@@ -155,7 +155,12 @@ async function start() {
           // Check if player landed on a special tile and trigger challenge
           if (tile && (tile.type === TileType.CHALLENGE || tile.type === TileType.BONUS || tile.type === TileType.PENALTY)) {
             // Get a random challenge based on tile type
-            const challenge = challengeService.getRandomChallenge();
+            // CHALLENGE tiles give trivia questions
+            let challengeType;
+            if (tile.type === TileType.CHALLENGE) {
+              challengeType = ChallengeType.TRIVIA;
+            }
+            const challenge = challengeService.getRandomChallenge(challengeType);
             
             io.to(data.roomId).emit(SocketEvent.CHALLENGE_STARTED, {
               playerId: data.playerId,
