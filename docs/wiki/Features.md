@@ -10,8 +10,9 @@ Complete guide to all features available in AlexDrikkelek.
 4. [Board Display](#board-display)
 5. [Gameplay Features](#gameplay-features)
 6. [Challenge System](#challenge-system)
-7. [Accessibility](#accessibility)
-8. [Progressive Web App](#progressive-web-app)
+7. [Admin Features](#admin-features)
+8. [Accessibility](#accessibility)
+9. [Progressive Web App](#progressive-web-app)
 
 ## Room Management
 
@@ -382,6 +383,9 @@ if (navigator.share) {
 
 ### Recently Added ✨
 
+- ✅ **Style Pack Management** (Nov 2025) - Admin dashboard for theme customization
+- ✅ **Built-in Themes** (Nov 2025) - Christmas and Halloween seasonal themes
+- ✅ **Custom Theme Creator** (Nov 2025) - Create unlimited custom color schemes
 - ✅ **Copy to Clipboard** (Nov 2025) - One-tap room code copying
 - ✅ **Native Share Dialog** (Nov 2025) - Mobile-friendly code sharing
 - ✅ Avatar selection system
@@ -451,4 +455,4 @@ For more information about specific features:
 
 ---
 
-**Last updated:** 12-11-2025
+**Last updated:** 13-11-2025

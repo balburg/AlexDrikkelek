@@ -11,7 +11,8 @@ This guide walks you through playing AlexDrikkelek, from starting a game to winn
 5. [Game Flow](#game-flow)
 6. [Challenge System](#challenge-system)
 7. [Winning the Game](#winning-the-game)
-8. [Tips and Tricks](#tips-and-tricks)
+8. [Admin Features](#admin-features)
+9. [Tips and Tricks](#tips-and-tricks)
 
 ## Overview
 
@@ -311,6 +312,43 @@ While the current version focuses on racing to the finish, future updates may in
 - Bonus points for consecutive correct answers
 - Leaderboard for multi-game tournaments
 
+## Admin Features
+
+### Style Pack Management
+
+**For Administrators:**
+
+AlexDrikkelek includes a powerful admin dashboard that allows administrators to customize the visual appearance of the application. This is perfect for:
+
+- **Seasonal Theming**: Switch to festive themes during holidays
+- **Brand Customization**: Match your organization's colors
+- **Event Theming**: Create special themes for tournaments and events
+
+**Access Admin Dashboard:**
+1. Navigate to `/admin` in your browser
+2. Log in with admin credentials (if enabled)
+3. Access Style Pack Management
+
+**Available Features:**
+- 🎨 **Built-in Themes**: Default, Christmas, and Halloween
+- ✨ **Custom Themes**: Create unlimited custom color schemes
+- ⚡ **Instant Activation**: Apply themes without page refresh
+- 🎯 **Theme Management**: Create, activate, and delete themes
+
+**Quick Actions:**
+- **Activate a Theme**: Click "Activate 🎨" on any theme card
+- **Create Custom Theme**: Click "➕ Create New Style Pack"
+- **Delete Custom Theme**: Click "Delete 🗑️" on custom themes
+
+**Theme Application:**
+When an administrator activates a theme:
+- All connected users see the new theme instantly
+- No page refresh required
+- Colors apply to all UI elements
+- Theme persists across sessions
+
+**For detailed administrator instructions**, see the [Admin Guide](./Admin-Guide.md).
+
 ## Tips and Tricks
 
 ### For Players
@@ -431,4 +469,4 @@ For more information, see our Privacy Policy.
 - [FAQ Section](./FAQ.md) (Coming Soon)
 - [GitHub Issues](https://github.com/balburg/AlexDrikkelek/issues)
 
-**Last updated:** 12-11-2025
+**Last updated:** 13-11-2025

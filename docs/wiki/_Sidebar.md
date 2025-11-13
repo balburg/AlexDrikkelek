@@ -5,6 +5,7 @@
 - [🚀 Getting Started](./Getting-Started.md)
 - [📖 User Guide](./User-Guide.md)
 - [✨ Features](./Features.md)
+- [👨‍💼 Admin Guide](./Admin-Guide.md)
 
 ### Architecture & Design
 - [🏗️ Architecture](./Architecture.md)
