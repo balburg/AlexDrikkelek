@@ -8,7 +8,7 @@ import CastButton from '@/components/CastButton';
 import { AVATARS, getRandomAvatar } from '@/lib/avatars';
 
 export default function PlayerPage() {
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, playerSessionId, setPlayerSessionId } = useSocket();
   const [playerName, setPlayerName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(getRandomAvatar());
   const [roomCode, setRoomCode] = useState('');
@@ -22,6 +22,7 @@ export default function PlayerPage() {
   const [isRolling, setIsRolling] = useState(false);
   const [message, setMessage] = useState('');
   const [showCopied, setShowCopied] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
 
   const handleCopyCode = async () => {
     if (!gameRoom) return;
@@ -59,6 +60,37 @@ export default function PlayerPage() {
     socket.on(SocketEvent.ROOM_UPDATED, (room: GameRoom) => {
       setGameRoom(room);
       setMessage('Room updated!');
+      
+      // Store playerSessionId when we receive room data
+      if (socket.id) {
+        const myPlayer = room.players.find(p => p.id === socket.id);
+        if (myPlayer && myPlayer.playerSessionId) {
+          setPlayerSessionId(myPlayer.playerSessionId);
+        }
+      }
+    });
+
+    // Listen for successful reconnection
+    socket.on(SocketEvent.PLAYER_RECONNECTED, (data: any) => {
+      if (data.room && data.player) {
+        // This is our own reconnection
+        setGameRoom(data.room);
+        setReconnecting(false);
+        setMessage('Reconnected successfully! 🎉');
+        console.log('Reconnected to room:', data.room.code);
+      } else if (data.playerName) {
+        // Another player reconnected
+        setMessage(`${data.playerName} reconnected!`);
+      }
+    });
+
+    // Listen for player disconnections
+    socket.on(SocketEvent.PLAYER_DISCONNECTED, (data: { playerName: string; temporary: boolean }) => {
+      if (data.temporary) {
+        setMessage(`${data.playerName} disconnected (reconnecting...)`);
+      } else {
+        setMessage(`${data.playerName} left the game`);
+      }
     });
 
     // Listen for game start
@@ -124,10 +156,13 @@ export default function PlayerPage() {
     socket.on('error', (data: { message: string }) => {
       setMessage(`Error: ${data.message}`);
       setIsRolling(false);
+      setReconnecting(false);
     });
 
     return () => {
       socket.off(SocketEvent.ROOM_UPDATED);
+      socket.off(SocketEvent.PLAYER_RECONNECTED);
+      socket.off(SocketEvent.PLAYER_DISCONNECTED);
       socket.off(SocketEvent.GAME_STARTED);
       socket.off(SocketEvent.DICE_ROLLED);
       socket.off(SocketEvent.PLAYER_MOVED);
@@ -136,7 +171,7 @@ export default function PlayerPage() {
       socket.off(SocketEvent.TURN_CHANGED);
       socket.off('error');
     };
-  }, [socket, gameRoom]);
+  }, [socket, gameRoom, setPlayerSessionId]);
 
   const handleCreateRoom = () => {
     if (!socket || !playerName) return;
@@ -177,12 +212,17 @@ export default function PlayerPage() {
   const isMyTurn = gameRoom && socket && gameRoom.players[gameRoom.currentTurn]?.id === socket.id;
   const myPlayer = gameRoom && socket ? gameRoom.players.find(p => p.id === socket.id) : null;
 
-  if (!isConnected) {
+  if (!isConnected || reconnecting) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
-          <p className="text-3xl mb-4">🔄</p>
-          <p className="text-2xl font-bold text-primary">Connecting...</p>
+          <p className="text-3xl mb-4 animate-spin">🔄</p>
+          <p className="text-2xl font-bold text-primary">
+            {reconnecting ? 'Reconnecting...' : 'Connecting...'}
+          </p>
+          {reconnecting && (
+            <p className="text-sm text-gray-600 mt-2">Restoring your game session...</p>
+          )}
         </div>
       </main>
     );

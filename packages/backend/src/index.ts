@@ -382,6 +382,45 @@ async function start() {
         }
       });
 
+      // Reconnect Player
+      socket.on(SocketEvent.RECONNECT, async (data: { playerSessionId: string }) => {
+        try {
+          const result = await gameService.reconnectPlayer(data.playerSessionId, socket.id);
+          
+          if (!result) {
+            socket.emit('error', { message: 'Session not found or expired' });
+            return;
+          }
+
+          const { room, player } = result;
+          
+          // Join the room
+          socket.join(room.id);
+          
+          // Notify the player of successful reconnection
+          socket.emit(SocketEvent.PLAYER_RECONNECTED, {
+            room,
+            player,
+            playerSessionId: data.playerSessionId,
+          });
+          
+          // Notify other players in the room
+          socket.to(room.id).emit(SocketEvent.PLAYER_RECONNECTED, {
+            playerId: socket.id,
+            playerSessionId: player.playerSessionId,
+            playerName: player.name,
+          });
+          
+          // Broadcast updated room state
+          io.to(room.id).emit(SocketEvent.ROOM_UPDATED, room);
+          
+          console.log(`Player ${player.name} reconnected to room ${room.code}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to reconnect';
+          socket.emit('error', { message });
+        }
+      });
+
       // Start Game
       socket.on(SocketEvent.GAME_STARTED, async (data: { roomId: string }) => {
         try {
@@ -549,33 +588,65 @@ async function start() {
             const disconnectedPlayer = room.players.find(p => p.id === socket.id);
             if (!disconnectedPlayer) continue;
             
-            const wasHost = disconnectedPlayer.isHost;
             const playerName = disconnectedPlayer.name;
+            const playerSessionId = disconnectedPlayer.playerSessionId;
             
-            // Remove the player from the room
-            const updatedRoom = await gameService.removePlayer(roomId, socket.id);
+            // Mark player as disconnected instead of removing them
+            const updatedRoom = await gameService.markPlayerDisconnected(roomId, socket.id);
             
             if (updatedRoom && updatedRoom.players.length > 0) {
-              // Notify remaining players
+              // Notify remaining players that player disconnected
               io.to(roomId).emit(SocketEvent.PLAYER_DISCONNECTED, {
                 playerId: socket.id,
+                playerSessionId,
                 playerName,
+                temporary: true, // Indicate this might be temporary
               });
-              
-              // If host was removed and a new host was promoted, notify everyone
-              if (wasHost) {
-                const newHost = updatedRoom.players.find(p => p.isHost);
-                io.to(roomId).emit(SocketEvent.HOST_CHANGED, {
-                  newHostId: newHost?.id,
-                  newHostName: newHost?.name,
-                });
-                console.log(`Host disconnected from room ${updatedRoom.code}. New host: ${newHost?.name}`);
-              }
               
               // Broadcast updated room state
               io.to(roomId).emit(SocketEvent.ROOM_UPDATED, updatedRoom);
               
-              console.log(`Player ${playerName} removed from room ${updatedRoom.code}`);
+              console.log(`Player ${playerName} marked as disconnected in room ${updatedRoom.code}`);
+              
+              // Set a timeout to remove player permanently if they don't reconnect
+              setTimeout(async () => {
+                try {
+                  const currentRoom = await gameService.getRoom(roomId);
+                  if (!currentRoom) return;
+                  
+                  const player = currentRoom.players.find(p => p.playerSessionId === playerSessionId);
+                  // Only remove if still disconnected after timeout period
+                  if (player && !player.isConnected) {
+                    const wasHost = player.isHost;
+                    const finalRoom = await gameService.removePlayer(roomId, player.id);
+                    
+                    if (finalRoom && finalRoom.players.length > 0) {
+                      // Notify that player was permanently removed
+                      io.to(roomId).emit(SocketEvent.PLAYER_DISCONNECTED, {
+                        playerId: player.id,
+                        playerSessionId,
+                        playerName,
+                        temporary: false, // Permanent removal
+                      });
+                      
+                      // If host was removed, notify about new host
+                      if (wasHost) {
+                        const newHost = finalRoom.players.find(p => p.isHost);
+                        io.to(roomId).emit(SocketEvent.HOST_CHANGED, {
+                          newHostId: newHost?.id,
+                          newHostName: newHost?.name,
+                        });
+                        console.log(`Host permanently removed from room ${finalRoom.code}. New host: ${newHost?.name}`);
+                      }
+                      
+                      io.to(roomId).emit(SocketEvent.ROOM_UPDATED, finalRoom);
+                      console.log(`Player ${playerName} permanently removed from room ${finalRoom.code} after timeout`);
+                    }
+                  }
+                } catch (error) {
+                  console.error(`Error in delayed player removal for room ${roomId}:`, error);
+                }
+              }, 60000); // 60 second grace period for reconnection
             }
           } catch (error) {
             console.error(`Error handling disconnect for room ${roomId}:`, error);
