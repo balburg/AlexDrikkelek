@@ -128,6 +128,22 @@ export default function AdminSettingsPage() {
           </p>
         </div>
 
+        {/* Navigation Links */}
+        <div className="mb-6 flex gap-4 justify-center">
+          <a
+            href="/admin"
+            className="px-6 py-3 bg-white text-blue-600 rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            ⚙️ Game Settings
+          </a>
+          <a
+            href="/admin/custom-spaces"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            🎨 Custom Spaces
+          </a>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-500 text-white rounded-2xl font-bold shadow-game">

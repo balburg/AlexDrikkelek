@@ -42,6 +42,7 @@ export interface Tile {
   position: number;
   type: TileType;
   challengeId?: string;
+  customSpaceId?: string; // Reference to a custom space if applicable
 }
 
 export enum TileType {
@@ -155,4 +156,42 @@ export interface StyleTheme {
   accentYellow: string;
   background?: string;
   pattern?: string;
+}
+
+// Custom Space Types
+export enum CustomSpaceType {
+  CHALLENGE = 'CHALLENGE',
+  DRINKING = 'DRINKING',
+  QUIZ = 'QUIZ',
+  TRIVIA = 'TRIVIA',
+  ACTION = 'ACTION',
+  DARE = 'DARE',
+  BONUS = 'BONUS',
+  PENALTY = 'PENALTY',
+  SPECIAL = 'SPECIAL',
+}
+
+export interface CustomSpace {
+  id: string;
+  name: string;
+  description: string;
+  type: CustomSpaceType;
+  logoUrl?: string;
+  backgroundUrl?: string;
+  imageUrl?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  packId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CustomSpacePack {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  spaces: CustomSpace[];
+  createdAt: Date;
+  updatedAt: Date;
 }
