@@ -160,7 +160,7 @@ export default function BoardGame() {
           </div>
 
           {/* Join Room Card */}
-          <div className="card-game max-w-md w-full border-8 border-white">
+          <div className="card-game card-purple max-w-md w-full border-8 border-white">
             <div className="text-center">
               <label className="block">
                 <span className="text-2xl font-bold text-gray-700 mb-4 block">
@@ -227,7 +227,7 @@ export default function BoardGame() {
         {/* Dice Roll Display - Large and Prominent */}
         {diceRoll && (
           <div className="mb-8 mx-auto">
-            <div className="bg-white rounded-3xl shadow-2xl p-12 text-center animate-bounce border-8 border-accent-yellow max-w-2xl">
+            <div className="bg-light-yellow rounded-3xl shadow-2xl p-12 text-center animate-bounce border-8 border-accent-yellow max-w-2xl">
               <p className="text-3xl md:text-4xl font-bold text-gray-600 mb-4">
                 {diceRoll.playerName} rolled
               </p>
@@ -255,7 +255,7 @@ export default function BoardGame() {
 
         {/* Visual Board - Only show during gameplay */}
         {gameRoom.status === 'PLAYING' && (
-          <div className="card-game max-w-6xl mx-auto border-8 border-white mb-6">
+          <div className="card-game card-blue max-w-6xl mx-auto border-8 border-white mb-6">
             <h2 className="text-3xl md:text-4xl font-black text-primary mb-6 text-center">
               🎲 Game Board
             </h2>
@@ -264,7 +264,7 @@ export default function BoardGame() {
         )}
 
         {/* Players Grid */}
-        <div className="card-game max-w-6xl mx-auto border-8 border-white">
+        <div className="card-game card-green max-w-6xl mx-auto border-8 border-white">
           <h2 className="text-3xl md:text-4xl font-black text-primary mb-6 text-center">
             👥 Players ({gameRoom.players.filter(p => !p.name.includes('Board Display')).length}/{gameRoom.maxPlayers})
           </h2>

@@ -19,6 +19,14 @@
     --color-accent-orange: #FF8C1A;
     --color-accent-green: #26890D;
     --color-accent-yellow: #FFD602;
+    
+    /* Light pastel backgrounds for components */
+    --bg-light-purple: #F3EBFF;
+    --bg-light-blue: #E8F4FE;
+    --bg-light-orange: #FFF3E6;
+    --bg-light-green: #E8F8E5;
+    --bg-light-yellow: #FFFBEB;
+    --bg-light-pink: #FFE8EE;
   }
 
   body {
@@ -64,8 +72,33 @@
 
   /* Fun card styles */
   .card-game {
-    @apply bg-white rounded-3xl shadow-2xl p-8 transform transition-all duration-300;
+    @apply rounded-3xl shadow-2xl p-8 transform transition-all duration-300;
     @apply hover:scale-105;
+  }
+  
+  /* Themed card backgrounds */
+  .card-purple {
+    background-color: var(--bg-light-purple);
+  }
+  
+  .card-blue {
+    background-color: var(--bg-light-blue);
+  }
+  
+  .card-orange {
+    background-color: var(--bg-light-orange);
+  }
+  
+  .card-green {
+    background-color: var(--bg-light-green);
+  }
+  
+  .card-yellow {
+    background-color: var(--bg-light-yellow);
+  }
+  
+  .card-pink {
+    background-color: var(--bg-light-pink);
   }
 
   /* Input styles */

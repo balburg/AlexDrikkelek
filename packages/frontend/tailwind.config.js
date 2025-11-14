@@ -28,6 +28,13 @@ module.exports = {
         success: 'var(--color-accent-green, #26890D)',
         danger: 'var(--color-secondary, #E21B3C)',
         warning: 'var(--color-accent-orange, #FF8C1A)',
+        // Light pastel backgrounds for components
+        'light-purple': 'var(--bg-light-purple, #F3EBFF)',
+        'light-blue': 'var(--bg-light-blue, #E8F4FE)',
+        'light-orange': 'var(--bg-light-orange, #FFF3E6)',
+        'light-green': 'var(--bg-light-green, #E8F8E5)',
+        'light-yellow': 'var(--bg-light-yellow, #FFFBEB)',
+        'light-pink': 'var(--bg-light-pink, #FFE8EE)',
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],

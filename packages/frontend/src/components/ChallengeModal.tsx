@@ -61,7 +61,7 @@ export default function ChallengeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-auto animate-scale-in overflow-hidden">
+      <div className="bg-light-yellow rounded-3xl shadow-2xl max-w-md w-full mx-auto animate-scale-in overflow-hidden">
         {/* Compact Header */}
         <div className={`bg-gradient-to-r ${getChallengeColor()} p-5 text-center`}>
           <div className="text-6xl mb-2">{getChallengeIcon()}</div>

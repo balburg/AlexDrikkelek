@@ -215,7 +215,7 @@ export default function PlayerPage() {
   if (!isConnected || reconnecting) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+        <div className="bg-light-yellow rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
           <p className="text-3xl mb-4 animate-spin">🔄</p>
           <p className="text-2xl font-bold text-primary">
             {reconnecting ? 'Reconnecting...' : 'Connecting...'}
@@ -242,7 +242,7 @@ export default function PlayerPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-2xl p-6 space-y-5">
+          <div className="bg-light-yellow rounded-3xl shadow-2xl p-6 space-y-5">
             {/* Avatar Selection */}
             <div>
               <label className="block">
@@ -347,7 +347,7 @@ export default function PlayerPage() {
     <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern">
       <div className="flex min-h-screen flex-col p-4 max-w-md mx-auto">
         {/* Compact Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-4 mb-4">
+        <div className="bg-light-yellow rounded-2xl shadow-xl p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs font-bold text-gray-500 uppercase">Game PIN</p>
@@ -389,7 +389,7 @@ export default function PlayerPage() {
         {/* Current Player Indicator - Show who's turn it is */}
         {gameRoom.status === 'PLAYING' && (
           <div className={`rounded-2xl shadow-xl p-6 mb-4 text-center ${
-            isMyTurn ? 'bg-accent-green' : 'bg-white'
+            isMyTurn ? 'bg-accent-green' : 'bg-light-green'
           }`}>
             <p className={`text-lg font-bold mb-1 ${isMyTurn ? 'text-white' : 'text-gray-600'}`}>
               {isMyTurn ? "🎯 Your Turn!" : "⏳ Waiting..."}
@@ -402,7 +402,7 @@ export default function PlayerPage() {
 
         {/* Dice Roll Display - Larger for mobile */}
         {diceRoll && (
-          <div className="bg-white rounded-2xl shadow-2xl p-12 mb-4 text-center animate-bounce">
+          <div className="bg-light-yellow rounded-2xl shadow-2xl p-12 mb-4 text-center animate-bounce">
             <p className="text-9xl mb-4">🎲</p>
             <p className="text-6xl font-black text-primary">{diceRoll}</p>
           </div>
@@ -421,7 +421,7 @@ export default function PlayerPage() {
                 Start Game!
               </button>
               {gameRoom.players.length < 2 && (
-                <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
+                <div className="bg-light-orange rounded-2xl shadow-xl p-6 text-center">
                   <p className="text-4xl mb-3">👥</p>
                   <p className="text-xl font-bold text-gray-600">
                     Need at least 2 players to start
@@ -435,7 +435,7 @@ export default function PlayerPage() {
           )}
 
           {gameRoom.status === 'WAITING' && !myPlayer?.isHost && (
-            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="bg-light-blue rounded-2xl shadow-xl p-8 text-center">
               <p className="text-5xl mb-4">⏳</p>
               <p className="text-2xl font-bold text-gray-600">Waiting for host to start...</p>
             </div>
@@ -452,14 +452,14 @@ export default function PlayerPage() {
           )}
 
           {gameRoom.status === 'PLAYING' && !isMyTurn && !diceRoll && (
-            <div className="bg-white rounded-2xl shadow-xl p-10 text-center">
+            <div className="bg-light-purple rounded-2xl shadow-xl p-10 text-center">
               <p className="text-6xl mb-4 animate-pulse">⏳</p>
               <p className="text-xl font-bold text-gray-600">Wait for your turn</p>
             </div>
           )}
 
           {isRolling && (
-            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            <div className="bg-light-yellow rounded-2xl shadow-xl p-12 text-center">
               <p className="text-7xl mb-4 animate-spin">🎲</p>
               <p className="text-3xl font-black text-primary animate-pulse">Rolling...</p>
             </div>
@@ -475,7 +475,7 @@ export default function PlayerPage() {
 
         {/* Player List - Collapsible/Minimal */}
         {gameRoom.status === 'WAITING' && (
-          <div className="bg-white rounded-2xl shadow-xl p-4 mt-4">
+          <div className="bg-light-green rounded-2xl shadow-xl p-4 mt-4">
             <p className="text-sm font-bold text-gray-500 mb-3 text-center uppercase">Players</p>
             <div className="space-y-2">
               {gameRoom.players.map((player, index) => (
