@@ -29,10 +29,12 @@ AlexDrikkelek is a real-time multiplayer board game platform built on a client-s
            ├──────────┬──────────┬──────────┐
            │          │          │          │
 ┌──────────▼─┐  ┌────▼────┐ ┌──▼──────┐ ┌─▼──────────┐
-│ Azure SQL  │  │  Redis  │ │  Blob   │ │   AD B2C   │
-│  Database  │  │  Cache  │ │ Storage │ │   (Auth)   │
+│ Azure SQL  │  │  Redis  │ │  Blob   │ │  Anonymous │
+│  Database  │  │  Cache  │ │ Storage │ │   Access   │
 └────────────┘  └─────────┘ └─────────┘ └────────────┘
 ```
+
+**Note:** The game operates with anonymous access. Players join with just a name and avatar - no authentication required.
 
 ## Component Details
 
@@ -67,7 +69,7 @@ AlexDrikkelek is a real-time multiplayer board game platform built on a client-s
 - Server-authoritative game logic
 - Database operations (CRUD)
 - Redis pub/sub for scaling
-- Authentication and authorization
+- Anonymous player management (no authentication)
 - Challenge management
 
 **Key Technologies:**
@@ -134,13 +136,19 @@ See `/database/schema.sql` for full schema.
 - Game assets (board tiles, icons)
 - Static content
 
-### Authentication (Azure AD B2C)
+### Anonymous Access
 
-**Features:**
-- OAuth 2.0 / OpenID Connect
-- Social login (Google, Facebook, etc.)
-- Guest access
-- JWT tokens
+**Design:**
+- No authentication required
+- Players join with just a name and avatar
+- Session persistence via browser localStorage
+- Reconnection support using session IDs
+
+**Benefits:**
+- Lower barrier to entry
+- Faster game start
+- Privacy-friendly
+- Simpler infrastructure
 
 ## Game Logic Flow
 
@@ -181,7 +189,7 @@ See `/database/schema.sql` for full schema.
 1. **Server-Authoritative Logic**: All game logic runs on server
 2. **Input Validation**: All inputs validated and sanitized
 3. **Rate Limiting**: Prevent abuse of API endpoints
-4. **Authentication**: Azure AD B2C for secure login
+4. **Anonymous Access**: Players join with name and avatar (no authentication)
 5. **HTTPS**: Enforced in production
 6. **CORS**: Configured for allowed origins only
 7. **SQL Injection**: Prevented via parameterized queries

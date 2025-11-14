@@ -65,10 +65,7 @@ Edit `packages/frontend/.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 
-# Azure AD B2C (Optional for local development)
-NEXT_PUBLIC_AZURE_AD_B2C_TENANT_NAME=your-tenant
-NEXT_PUBLIC_AZURE_AD_B2C_CLIENT_ID=your-client-id
-NEXT_PUBLIC_AZURE_AD_B2C_POLICY_NAME=B2C_1_signupsignin
+# Note: Authentication is disabled - game operates anonymously
 
 # Feature Flags
 NEXT_PUBLIC_ENABLE_CHROMECAST=true

@@ -232,26 +232,21 @@ az staticwebapp secrets list \
 
 ---
 
-### 7. Azure AD B2C (Authentication)
+### 7. Anonymous Access
 
-1. **Create B2C Tenant:**
-   - Azure Portal → Create a resource → Azure AD B2C
-   - Follow wizard to create tenant
+**The game operates with anonymous access - no authentication required.**
 
-2. **Register Application:**
-   - B2C Portal → App registrations → New registration
-   - Name: "AlexDrikkelek"
-   - Redirect URIs: Add your frontend URLs
+Players join with just a name and avatar. This simplifies the user experience and reduces infrastructure complexity.
 
-3. **Configure User Flows:**
-   - User flows → New user flow
-   - Select "Sign up and sign in"
-   - Configure identity providers
+**Session Management:**
+- Sessions are stored in Redis with 4-hour expiry
+- Session IDs are saved in browser localStorage
+- Reconnection is automatic using the stored session ID
 
-4. **Note Configuration:**
-   - Tenant name: `yourname.b2clogin.com`
-   - Client ID: From app registration
-   - Policy name: `B2C_1_signupsignin`
+**Production Considerations:**
+- For admin panel access, implement IP whitelisting or VPN at the infrastructure level
+- Consider rate limiting to prevent abuse
+- Monitor for unusual activity patterns
 
 ---
 
@@ -680,7 +675,8 @@ az sql db ltr-policy set \
 - [ ] Enable HTTPS only on all services
 - [ ] Configure firewall rules (minimal access)
 - [ ] Rotate access keys regularly
-- [ ] Enable Azure AD authentication
+- [ ] Verify anonymous access is working properly
+- [ ] Set up IP whitelisting for admin panel (recommended)
 - [ ] Set up private endpoints (for production)
 - [ ] Enable threat detection
 - [ ] Configure CORS properly

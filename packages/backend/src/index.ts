@@ -11,6 +11,14 @@ import * as customSpaceService from './services/customSpaceService';
 
 dotenv.config();
 
+/**
+ * AlexDrikkelek Backend Server
+ * 
+ * AUTHENTICATION: Intentionally disabled - the game operates with anonymous access.
+ * Players join with just a name and avatar. No login or user accounts required.
+ * This design choice prioritizes ease of use and privacy.
+ */
+
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 

@@ -116,15 +116,9 @@ az staticwebapp create \
   --output-location ".next"
 ```
 
-### 7. Azure AD B2C
+### 7. Application Insights
 
-1. Create Azure AD B2C tenant from Azure Portal
-2. Register application
-3. Configure sign-up/sign-in user flow
-4. Note down:
-   - Tenant name
-   - Client ID
-   - Client Secret
+**Note:** Authentication is intentionally disabled. The game operates anonymously - players join with just a name and avatar.
 
 ### 8. Application Insights
 
@@ -393,7 +387,7 @@ az sql db export \
 
 - [ ] Enable HTTPS only
 - [ ] Configure firewall rules
-- [ ] Enable Azure AD B2C
+- [ ] Verify anonymous access is working (no authentication required)
 - [ ] Set up CORS properly
 - [ ] Enable Application Insights
 - [ ] Configure backup policies

@@ -44,7 +44,7 @@ This is a monorepo containing:
 - **Database**: Azure SQL Database
 - **Cache**: Azure Cache for Redis
 - **Storage**: Azure Blob Storage
-- **Auth**: Azure AD B2C
+- **Auth**: Anonymous access (no authentication required)
 - **Observability**: Azure Monitor + Application Insights
 - **CI/CD**: Azure DevOps Pipelines
 
@@ -192,7 +192,7 @@ AlexDrikkelek/
 ## 🔐 Security
 
 - Server-authoritative game logic prevents cheating
-- Azure AD B2C for authentication
+- Anonymous access (no authentication required - players join with name and avatar)
 - HTTPS enforced in production
 - Input validation and sanitization
 - Rate limiting on API endpoints
