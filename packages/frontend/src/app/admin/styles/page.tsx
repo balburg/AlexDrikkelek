@@ -196,7 +196,7 @@ export default function StylePacksPage() {
 
         {/* Create Form */}
         {showCreateForm && (
-          <div className="mb-8 bg-white rounded-3xl p-8 shadow-game">
+          <div className="mb-8 bg-light-blue rounded-3xl p-8 shadow-game">
             <h2 className="text-3xl font-black text-primary mb-6">Create Custom Style Pack</h2>
             
             <div className="space-y-4 mb-6">
@@ -294,7 +294,7 @@ export default function StylePacksPage() {
           {stylePacks.map((pack) => (
             <div
               key={pack.id}
-              className={`bg-white rounded-3xl p-6 shadow-game transform transition-all duration-300 hover:scale-105 ${
+              className={`bg-light-yellow rounded-3xl p-6 shadow-game transform transition-all duration-300 hover:scale-105 ${
                 pack.isActive ? 'ring-4 ring-accent-green' : ''
               }`}
             >

@@ -159,7 +159,7 @@ export default function AdminSettingsPage() {
         )}
 
         {/* Settings Form */}
-        <div className="bg-white rounded-3xl p-8 shadow-game">
+        <div className="bg-light-purple rounded-3xl p-8 shadow-game">
           <div className="space-y-6">
             {/* Max Players */}
             <div>
