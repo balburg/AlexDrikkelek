@@ -29,8 +29,9 @@ The AlexDrikkelek admin panel provides tools for customizing and managing the ap
 ### Login Process
 
 1. Navigate to the admin page at `/admin`
-2. Enter your administrator credentials (if authentication is enabled)
-3. Access the admin dashboard
+2. Access the admin dashboard (no authentication required)
+
+**Note:** The admin panel is publicly accessible. In a production environment, you should implement access controls at the infrastructure level (e.g., IP whitelisting, VPN).
 
 ### Admin Dashboard
 

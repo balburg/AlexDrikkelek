@@ -931,7 +931,6 @@ socket.on('error', (data: {
 | 200 | OK | Successful GET request |
 | 201 | Created | Successfully created room |
 | 400 | Bad Request | Invalid input data |
-| 401 | Unauthorized | Missing or invalid authentication |
 | 404 | Not Found | Room doesn't exist |
 | 409 | Conflict | Game already started |
 | 429 | Too Many Requests | Rate limit exceeded |
@@ -971,25 +970,23 @@ X-RateLimit-Reset: 1699876543
 
 ---
 
-## Authentication (Future)
+---
 
-Authentication via Azure AD B2C will be implemented:
+## Anonymous Access
 
-**Authorization Header:**
-```
-Authorization: Bearer <JWT_TOKEN>
-```
+The API operates with anonymous access - no authentication required.
 
-**Token Structure:**
-```typescript
-{
-  sub: string;        // User ID
-  name: string;       // User name
-  email: string;      // User email
-  iat: number;        // Issued at
-  exp: number;        // Expiration
-}
-```
+**How it works:**
+1. Players provide a name and avatar when joining
+2. Backend generates a session ID stored in Redis
+3. Session ID is saved in browser localStorage for reconnection
+4. Sessions expire after 4 hours of inactivity
+
+**Benefits:**
+- Lower barrier to entry
+- Faster game start
+- Privacy-friendly
+- No need for account management
 
 ---
 

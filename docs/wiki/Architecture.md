@@ -25,7 +25,7 @@ graph TB
     end
     
     subgraph "Services Layer"
-        H[Azure AD B2C<br/>Authentication]
+        H[Anonymous Access<br/>No Authentication]
         I[Azure Monitor<br/>Application Insights]
     end
     
@@ -88,7 +88,7 @@ graph TB
 | Azure SQL Database | Data persistence | Production |
 | Azure Cache for Redis | Session storage, caching | Production |
 | Azure Blob Storage | Media assets (avatars, icons) | Production |
-| Azure AD B2C | User authentication | Production |
+| Anonymous Access | No authentication (players use name + avatar) | Production |
 | Azure Monitor | Performance monitoring | Production |
 | Application Insights | Request tracking, logging | Production |
 | Azure DevOps Pipelines | CI/CD automation | All |
@@ -343,19 +343,27 @@ GET  /api/challenges/random      # Get random challenge
 
 ## Security Architecture
 
-### Authentication & Authorization
+### Anonymous Access
+
+The game operates with anonymous access for simplicity and ease of use.
 
 ```mermaid
 graph LR
-    A[Client] -->|1. Login Request| B[Azure AD B2C]
-    B -->|2. OAuth Flow| C[Consent]
-    C -->|3. Auth Code| B
-    B -->|4. JWT Token| A
-    A -->|5. API Request + JWT| D[Backend]
-    D -->|6. Validate Token| B
-    B -->|7. Token Valid| D
-    D -->|8. Response| A
+    A[Player] -->|1. Enter Name + Avatar| B[Frontend]
+    B -->|2. Create/Join Room| C[Backend]
+    C -->|3. Generate Session ID| D[Redis]
+    D -->|4. Session Stored| C
+    C -->|5. Room Info| B
+    B -->|6. Store Session in localStorage| A
+    A -->|7. Play Game| C
 ```
+
+**Benefits:**
+- Lower barrier to entry
+- Faster game start
+- Privacy-friendly (no personal data required)
+- Simplified infrastructure
+- Easy reconnection via session IDs
 
 **Security Measures:**
 
@@ -481,9 +489,10 @@ Internet
                         ├─→ Azure SQL Database
                         ├─→ Azure Redis Cache
                         ├─→ Azure Blob Storage
-                        ├─→ Azure AD B2C
                         └─→ Application Insights
 ```
+
+**Note:** Authentication is intentionally disabled. The system operates anonymously.
 
 ### CI/CD Pipeline
 
