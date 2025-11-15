@@ -196,3 +196,55 @@ export function validateTriviaAnswer(challengeId: string, answerIndex: number): 
   
   return challenge.correctAnswer === answerIndex;
 }
+
+/**
+ * Get all challenges
+ */
+export function getAllChallenges(): Challenge[] {
+  return challenges;
+}
+
+/**
+ * Create a new challenge
+ */
+export function createChallenge(data: Omit<Challenge, 'id'>): Challenge {
+  const newChallenge: Challenge = {
+    id: `${data.type.toLowerCase()}_${Date.now()}`,
+    ...data,
+  };
+  
+  challenges.push(newChallenge);
+  return newChallenge;
+}
+
+/**
+ * Update a challenge
+ */
+export function updateChallenge(id: string, updates: Partial<Omit<Challenge, 'id'>>): Challenge | null {
+  const index = challenges.findIndex(c => c.id === id);
+  
+  if (index === -1) {
+    return null;
+  }
+  
+  challenges[index] = {
+    ...challenges[index],
+    ...updates,
+  };
+  
+  return challenges[index];
+}
+
+/**
+ * Delete a challenge
+ */
+export function deleteChallenge(id: string): boolean {
+  const index = challenges.findIndex(c => c.id === id);
+  
+  if (index === -1) {
+    return false;
+  }
+  
+  challenges.splice(index, 1);
+  return true;
+}

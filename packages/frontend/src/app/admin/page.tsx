@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { GameSettings, ChallengeDifficulty } from '@/types/game';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function AdminSettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<GameSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -16,16 +18,36 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState<Partial<GameSettings>>({});
 
   useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
     loadSettings();
-  }, []);
+  }, [router]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('adminToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Basic ${token}`,
+    };
+  };
 
   const loadSettings = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_URL}/api/admin/settings`);
+      const response = await fetch(`${API_URL}/api/admin/settings`, {
+        headers: getAuthHeaders(),
+      });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/admin/login');
+          return;
+        }
         throw new Error('Failed to load settings');
       }
 
@@ -47,9 +69,7 @@ export default function AdminSettingsPage() {
 
       const response = await fetch(`${API_URL}/api/admin/settings`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(formData),
       });
 
@@ -81,6 +101,7 @@ export default function AdminSettingsPage() {
 
       const response = await fetch(`${API_URL}/api/admin/settings/reset`, {
         method: 'POST',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -129,18 +150,36 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Navigation Links */}
-        <div className="mb-6 flex gap-4 justify-center">
+        <div className="mb-6 flex gap-4 justify-center flex-wrap">
           <a
-            href="/admin"
+            href="/admin/dashboard"
             className="px-6 py-3 bg-white text-blue-600 rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
           >
-            ⚙️ Game Settings
+            🏠 Dashboard
+          </a>
+          <a
+            href="/admin/challenges"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            🎯 Challenges
           </a>
           <a
             href="/admin/custom-spaces"
             className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
           >
             🎨 Custom Spaces
+          </a>
+          <a
+            href="/admin/styles"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            🌈 Styles
+          </a>
+          <a
+            href="/admin/statistics"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            📊 Statistics
           </a>
         </div>
 
