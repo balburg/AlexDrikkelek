@@ -17,7 +17,7 @@ export default function Home() {
           {/* Player View Card */}
           <a
             href="/player"
-            className="group card-game border-8 border-accent-orange hover:border-accent-yellow transition-all duration-300"
+            className="group card-game card-orange border-8 border-accent-orange hover:border-accent-yellow transition-all duration-300"
           >
             <div className="text-center space-y-6">
               {/* Icon */}
@@ -47,7 +47,7 @@ export default function Home() {
           {/* Board View Card */}
           <a
             href="/board"
-            className="group card-game border-8 border-accent-blue hover:border-accent-green transition-all duration-300"
+            className="group card-game card-blue border-8 border-accent-blue hover:border-accent-green transition-all duration-300"
           >
             <div className="text-center space-y-6">
               {/* Icon */}

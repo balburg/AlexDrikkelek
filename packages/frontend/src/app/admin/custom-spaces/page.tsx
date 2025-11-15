@@ -354,12 +354,12 @@ export default function CustomSpacesPage() {
         {/* Packs List */}
         <div className="space-y-6">
           {packs.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
+            <div className="text-center py-12 bg-light-purple rounded-lg shadow">
               <p className="text-gray-500">No custom space packs yet. Create one to get started!</p>
             </div>
           ) : (
             packs.map((pack) => (
-              <div key={pack.id} className="bg-white rounded-lg shadow-lg p-6">
+              <div key={pack.id} className="bg-light-green rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">{pack.name}</h2>
@@ -468,7 +468,7 @@ export default function CustomSpacesPage() {
         {/* Pack Modal */}
         {showPackModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="bg-light-orange rounded-lg p-6 max-w-md w-full">
               <h2 className="text-2xl font-bold mb-4">
                 {editingPack ? 'Edit Pack' : 'Create New Pack'}
               </h2>
@@ -535,7 +535,7 @@ export default function CustomSpacesPage() {
         {/* Space Modal */}
         {showSpaceModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full my-8">
+            <div className="bg-light-pink rounded-lg p-6 max-w-2xl w-full my-8">
               <h2 className="text-2xl font-bold mb-4">
                 {editingSpace ? 'Edit Space' : 'Create New Space'}
               </h2>

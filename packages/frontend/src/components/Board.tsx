@@ -114,7 +114,7 @@ export default function Board({ board, players }: BoardProps) {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
+      <div className="mt-6 bg-light-purple rounded-2xl p-4 backdrop-blur-sm">
         <h3 className="text-lg md:text-xl font-bold text-primary mb-3 text-center">Board Legend</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div className="flex items-center gap-2">
