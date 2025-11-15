@@ -433,3 +433,33 @@ export async function promoteNewHost(room: GameRoom): Promise<void> {
   // Update room host ID
   room.hostId = oldestPlayer.id;
 }
+
+/**
+ * Get all rooms (for statistics and admin purposes)
+ */
+export async function getAllRooms(): Promise<GameRoom[]> {
+  const keys = await redis.keys('room:*');
+  const rooms: GameRoom[] = [];
+  
+  for (const key of keys) {
+    const roomData = await redis.get(key);
+    if (roomData) {
+      try {
+        const room = JSON.parse(roomData) as GameRoom;
+        // Convert date strings back to Date objects
+        room.createdAt = new Date(room.createdAt);
+        room.updatedAt = new Date(room.updatedAt);
+        room.players = room.players.map(p => ({
+          ...p,
+          joinedAt: new Date(p.joinedAt),
+          lastDisconnectedAt: p.lastDisconnectedAt ? new Date(p.lastDisconnectedAt) : undefined,
+        }));
+        rooms.push(room);
+      } catch (error) {
+        console.error(`Error parsing room data for key ${key}:`, error);
+      }
+    }
+  }
+  
+  return rooms;
+}

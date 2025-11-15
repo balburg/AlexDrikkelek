@@ -2,12 +2,14 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType, Challenge } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 import * as settingsService from './services/settingsService';
 import * as stylePackService from './services/stylePackService';
 import * as customSpaceService from './services/customSpaceService';
+import * as gameStatsService from './services/gameStatsService';
+import { authMiddleware, verifyCredentials } from './middleware/auth';
 
 dotenv.config();
 
@@ -45,8 +47,30 @@ async function start() {
     return { message: 'pong' };
   });
 
-  // Settings routes (Admin)
-  fastify.get('/api/admin/settings', async (request, reply) => {
+  // Admin login route (no auth required)
+  fastify.post('/api/admin/login', async (request, reply) => {
+    try {
+      const { username, password } = request.body as { username: string; password: string };
+      
+      if (!username || !password) {
+        reply.code(400).send({ error: 'Username and password required' });
+        return;
+      }
+
+      if (verifyCredentials(username, password)) {
+        // Create a simple session token (in production, use JWT)
+        const token = Buffer.from(`${username}:${password}`).toString('base64');
+        reply.send({ success: true, token });
+      } else {
+        reply.code(401).send({ error: 'Invalid credentials' });
+      }
+    } catch (error) {
+      reply.code(500).send({ error: 'Login failed' });
+    }
+  });
+
+  // Settings routes (Admin - Protected)
+  fastify.get('/api/admin/settings', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const settings = await settingsService.getSettings();
       reply.type('application/json');
@@ -56,7 +80,7 @@ async function start() {
     }
   });
 
-  fastify.put('/api/admin/settings', async (request, reply) => {
+  fastify.put('/api/admin/settings', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const updates = request.body as Partial<GameSettings>;
       const settings = await settingsService.updateSettings(updates);
@@ -68,7 +92,7 @@ async function start() {
     }
   });
 
-  fastify.post('/api/admin/settings/reset', async (request, reply) => {
+  fastify.post('/api/admin/settings/reset', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const settings = await settingsService.resetSettings();
       reply.type('application/json');
@@ -79,7 +103,7 @@ async function start() {
   });
 
   // Style Pack routes (Admin)
-  fastify.get('/api/admin/style-packs', async (request, reply) => {
+  fastify.get('/api/admin/style-packs', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const packs = await stylePackService.getAllStylePacks();
       reply.type('application/json');
@@ -89,7 +113,7 @@ async function start() {
     }
   });
 
-  fastify.get('/api/admin/style-packs/active', async (request, reply) => {
+  fastify.get('/api/admin/style-packs/active', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const pack = await stylePackService.getActiveStylePack();
       reply.type('application/json');
@@ -99,7 +123,7 @@ async function start() {
     }
   });
 
-  fastify.get('/api/admin/style-packs/:id', async (request, reply) => {
+  fastify.get('/api/admin/style-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const pack = await stylePackService.getStylePackById(id);
@@ -114,7 +138,7 @@ async function start() {
     }
   });
 
-  fastify.post('/api/admin/style-packs', async (request, reply) => {
+  fastify.post('/api/admin/style-packs', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { name, description, theme, previewImage } = request.body as {
         name: string;
@@ -131,7 +155,7 @@ async function start() {
     }
   });
 
-  fastify.put('/api/admin/style-packs/:id', async (request, reply) => {
+  fastify.put('/api/admin/style-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const updates = request.body as Partial<{ name: string; description: string; theme: StyleTheme; previewImage: string }>;
@@ -144,7 +168,7 @@ async function start() {
     }
   });
 
-  fastify.post('/api/admin/style-packs/:id/activate', async (request, reply) => {
+  fastify.post('/api/admin/style-packs/:id/activate', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const pack = await stylePackService.activateStylePack(id);
@@ -156,7 +180,7 @@ async function start() {
     }
   });
 
-  fastify.delete('/api/admin/style-packs/:id', async (request, reply) => {
+  fastify.delete('/api/admin/style-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       await stylePackService.deleteStylePack(id);
@@ -179,7 +203,7 @@ async function start() {
   });
 
   // Custom Space Pack routes (Admin)
-  fastify.get('/api/admin/custom-space-packs', async (request, reply) => {
+  fastify.get('/api/admin/custom-space-packs', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const packs = await customSpaceService.getAllPacks();
       reply.type('application/json');
@@ -189,7 +213,7 @@ async function start() {
     }
   });
 
-  fastify.get('/api/admin/custom-space-packs/active', async (request, reply) => {
+  fastify.get('/api/admin/custom-space-packs/active', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const packs = await customSpaceService.getActivePacks();
       reply.type('application/json');
@@ -199,7 +223,7 @@ async function start() {
     }
   });
 
-  fastify.get('/api/admin/custom-space-packs/:id', async (request, reply) => {
+  fastify.get('/api/admin/custom-space-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const pack = await customSpaceService.getPackById(id);
@@ -214,7 +238,7 @@ async function start() {
     }
   });
 
-  fastify.post('/api/admin/custom-space-packs', async (request, reply) => {
+  fastify.post('/api/admin/custom-space-packs', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { name, description, isActive } = request.body as {
         name: string;
@@ -230,7 +254,7 @@ async function start() {
     }
   });
 
-  fastify.put('/api/admin/custom-space-packs/:id', async (request, reply) => {
+  fastify.put('/api/admin/custom-space-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const updates = request.body as Partial<{ name: string; description: string; isActive: boolean }>;
@@ -243,7 +267,7 @@ async function start() {
     }
   });
 
-  fastify.post('/api/admin/custom-space-packs/:id/toggle', async (request, reply) => {
+  fastify.post('/api/admin/custom-space-packs/:id/toggle', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const { isActive } = request.body as { isActive: boolean };
@@ -256,7 +280,7 @@ async function start() {
     }
   });
 
-  fastify.delete('/api/admin/custom-space-packs/:id', async (request, reply) => {
+  fastify.delete('/api/admin/custom-space-packs/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       await customSpaceService.deletePack(id);
@@ -268,7 +292,7 @@ async function start() {
   });
 
   // Custom Space routes (Admin)
-  fastify.post('/api/admin/custom-space-packs/:packId/spaces', async (request, reply) => {
+  fastify.post('/api/admin/custom-space-packs/:packId/spaces', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { packId } = request.params as { packId: string };
       const { name, description, type, logoUrl, backgroundUrl, imageUrl, backgroundColor, textColor } = request.body as {
@@ -296,7 +320,7 @@ async function start() {
     }
   });
 
-  fastify.put('/api/admin/custom-spaces/:id', async (request, reply) => {
+  fastify.put('/api/admin/custom-spaces/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       const updates = request.body as Partial<{
@@ -318,7 +342,7 @@ async function start() {
     }
   });
 
-  fastify.delete('/api/admin/custom-spaces/:id', async (request, reply) => {
+  fastify.delete('/api/admin/custom-spaces/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
       await customSpaceService.deleteSpace(id);
@@ -337,6 +361,72 @@ async function start() {
       return spaces;
     } catch (error) {
       reply.code(500).type('application/json').send({ error: 'Failed to get active custom spaces' });
+    }
+  });
+
+  // Challenges routes (Admin - Protected)
+  fastify.get('/api/admin/challenges', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const challenges = challengeService.getAllChallenges();
+      reply.type('application/json');
+      return challenges;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get challenges' });
+    }
+  });
+
+  fastify.post('/api/admin/challenges', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const challengeData = request.body as Omit<Challenge, 'id'>;
+      const challenge = challengeService.createChallenge(challengeData);
+      reply.code(201).type('application/json');
+      return challenge;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create challenge';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.put('/api/admin/challenges/:id', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const updates = request.body as Partial<Omit<Challenge, 'id'>>;
+      const challenge = challengeService.updateChallenge(id, updates);
+      if (!challenge) {
+        reply.code(404).type('application/json').send({ error: 'Challenge not found' });
+        return;
+      }
+      reply.type('application/json');
+      return challenge;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update challenge';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  fastify.delete('/api/admin/challenges/:id', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const success = challengeService.deleteChallenge(id);
+      if (!success) {
+        reply.code(404).type('application/json').send({ error: 'Challenge not found' });
+        return;
+      }
+      reply.code(204).send();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete challenge';
+      reply.code(400).type('application/json').send({ error: message });
+    }
+  });
+
+  // Game Statistics routes (Admin - Protected)
+  fastify.get('/api/admin/statistics', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const stats = await gameStatsService.getGameStatistics();
+      reply.type('application/json');
+      return stats;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get game statistics' });
     }
   });
 
