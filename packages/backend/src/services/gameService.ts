@@ -466,3 +466,29 @@ export async function getAllRooms(): Promise<GameRoom[]> {
   
   return rooms;
 }
+
+/**
+ * Finish the game and reset to lobby
+ */
+export async function finishGame(roomId: string): Promise<GameRoom | null> {
+  const room = await getRoom(roomId);
+  if (!room) return null;
+  
+  // Reset game state to waiting/lobby
+  room.status = RoomStatus.WAITING;
+  room.currentTurn = 0;
+  
+  // Reset all players' positions
+  room.players.forEach(player => {
+    player.position = 0;
+  });
+  
+  // Generate new board for next game
+  const seed = `${Date.now()}_${Math.random()}`;
+  room.board = await generateBoard(seed);
+  
+  await updateRoom(room);
+  
+  return room;
+}
+

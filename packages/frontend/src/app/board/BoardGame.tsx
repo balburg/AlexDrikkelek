@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { GameRoom, SocketEvent, Player } from '@/types/game';
 import Board from '@/components/Board';
+import WinnerCelebration from '@/components/WinnerCelebration';
 
 export default function BoardGame() {
   const { socket, isConnected } = useSocket();
@@ -17,6 +18,7 @@ export default function BoardGame() {
     value: number; 
     timestamp: number;
   } | null>(null);
+  const [winner, setWinner] = useState<Player | null>(null);
   const [message, setMessage] = useState('');
   const [showCopied, setShowCopied] = useState(false);
 
@@ -98,6 +100,19 @@ export default function BoardGame() {
       setMessage(`${data.currentPlayer.name}'s turn!`);
     });
 
+    // Listen for player finishing
+    socket.on(SocketEvent.PLAYER_FINISHED, (data: { player: Player; playerId: string; playerName: string }) => {
+      setWinner(data.player);
+      setMessage(`${data.playerName} finished the game! 🏆`);
+    });
+
+    // Listen for game ended (returned to lobby)
+    socket.on(SocketEvent.GAME_ENDED, (room: GameRoom) => {
+      setGameRoom(room);
+      setWinner(null);
+      setMessage('Returned to lobby! Ready for a new game 🎮');
+    });
+
     // Listen for errors
     socket.on('error', (data: { message: string }) => {
       setMessage(`Error: ${data.message}`);
@@ -111,6 +126,8 @@ export default function BoardGame() {
       socket.off(SocketEvent.DICE_ROLLED);
       socket.off(SocketEvent.PLAYER_MOVED);
       socket.off(SocketEvent.TURN_CHANGED);
+      socket.off(SocketEvent.PLAYER_FINISHED);
+      socket.off(SocketEvent.GAME_ENDED);
       socket.off('error');
     };
   }, [socket, gameRoom]);
@@ -132,6 +149,11 @@ export default function BoardGame() {
       code: roomCode.toUpperCase(), 
       playerName: '📺 Board Display' 
     });
+  };
+
+  const handleFinishGame = () => {
+    if (!socket || !gameRoom) return;
+    socket.emit(SocketEvent.FINISH_GAME, { roomId: gameRoom.id });
   };
 
   if (!isConnected) {
@@ -328,6 +350,14 @@ export default function BoardGame() {
           ← Back to Home
         </a>
       </div>
+
+      {/* Winner Celebration */}
+      {winner && (
+        <WinnerCelebration
+          winner={winner}
+          onFinishGame={handleFinishGame}
+        />
+      )}
     </main>
   );
 }

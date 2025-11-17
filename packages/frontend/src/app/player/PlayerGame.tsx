@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { GameRoom, SocketEvent, Challenge, Tile, Player } from '@/types/game';
 import ChallengeModal from '@/components/ChallengeModal';
 import CastButton from '@/components/CastButton';
+import WinnerCelebration from '@/components/WinnerCelebration';
 import { AVATARS, getRandomAvatar } from '@/lib/avatars';
 
 export default function PlayerPage() {
@@ -18,6 +19,7 @@ export default function PlayerPage() {
     playerName: string;
     playerId: string;
   } | null>(null);
+  const [winner, setWinner] = useState<Player | null>(null);
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [message, setMessage] = useState('');
@@ -152,6 +154,19 @@ export default function PlayerPage() {
       setMessage(`${data.currentPlayer.name}'s turn!`);
     });
 
+    // Listen for player finishing
+    socket.on(SocketEvent.PLAYER_FINISHED, (data: { player: Player; playerId: string; playerName: string }) => {
+      setWinner(data.player);
+      setMessage(`${data.playerName} finished the game! 🏆`);
+    });
+
+    // Listen for game ended (returned to lobby)
+    socket.on(SocketEvent.GAME_ENDED, (room: GameRoom) => {
+      setGameRoom(room);
+      setWinner(null);
+      setMessage('Returned to lobby! Ready for a new game 🎮');
+    });
+
     // Listen for errors
     socket.on('error', (data: { message: string }) => {
       setMessage(`Error: ${data.message}`);
@@ -169,6 +184,8 @@ export default function PlayerPage() {
       socket.off(SocketEvent.CHALLENGE_STARTED);
       socket.off(SocketEvent.CHALLENGE_COMPLETED);
       socket.off(SocketEvent.TURN_CHANGED);
+      socket.off(SocketEvent.PLAYER_FINISHED);
+      socket.off(SocketEvent.GAME_ENDED);
       socket.off('error');
     };
   }, [socket, gameRoom, setPlayerSessionId]);
@@ -207,6 +224,11 @@ export default function PlayerPage() {
       success,
       answer,
     });
+  };
+
+  const handleFinishGame = () => {
+    if (!socket || !gameRoom) return;
+    socket.emit(SocketEvent.FINISH_GAME, { roomId: gameRoom.id });
   };
 
   const isMyTurn = gameRoom && socket && gameRoom.players[gameRoom.currentTurn]?.id === socket.id;
@@ -499,6 +521,14 @@ export default function PlayerPage() {
           playerName={currentChallenge.playerName}
           onComplete={handleChallengeComplete}
           onClose={() => setCurrentChallenge(null)}
+        />
+      )}
+
+      {/* Winner Celebration */}
+      {winner && (
+        <WinnerCelebration
+          winner={winner}
+          onFinishGame={handleFinishGame}
         />
       )}
     </main>

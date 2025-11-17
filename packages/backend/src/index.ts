@@ -623,8 +623,18 @@ async function start() {
             tile,
           });
 
+          // Check if player reached the finish
+          if (tile && tile.type === TileType.FINISH) {
+            // Player finished the game!
+            io.to(data.roomId).emit(SocketEvent.PLAYER_FINISHED, {
+              player,
+              playerId: data.playerId,
+              playerName: player?.name,
+            });
+            console.log(`Player ${player?.name} finished the game!`);
+          }
           // Check if player landed on a special tile and trigger challenge
-          if (tile && (tile.type === TileType.CHALLENGE || tile.type === TileType.BONUS || tile.type === TileType.PENALTY)) {
+          else if (tile && (tile.type === TileType.CHALLENGE || tile.type === TileType.BONUS || tile.type === TileType.PENALTY)) {
             // Get a random challenge based on tile type
             // CHALLENGE tiles give trivia questions
             let challengeType;
@@ -701,6 +711,22 @@ async function start() {
           console.log(`Challenge ${isCorrect ? 'completed' : 'failed'} by player ${player?.name}`);
         } catch (error) {
           socket.emit('error', { message: 'Failed to complete challenge' });
+        }
+      });
+
+      // Finish Game - reset to lobby
+      socket.on(SocketEvent.FINISH_GAME, async (data: { roomId: string }) => {
+        try {
+          const room = await gameService.finishGame(data.roomId);
+          if (room) {
+            // Broadcast game ended and room updated to all players
+            io.to(data.roomId).emit(SocketEvent.GAME_ENDED, room);
+            io.to(data.roomId).emit(SocketEvent.ROOM_UPDATED, room);
+            console.log(`Game finished in room ${room.code}, returned to lobby`);
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to finish game';
+          socket.emit('error', { message });
         }
       });
 

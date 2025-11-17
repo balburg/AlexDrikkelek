@@ -113,6 +113,8 @@ export enum SocketEvent {
   // Game State
   GAME_STARTED = 'game_started',
   GAME_ENDED = 'game_ended',
+  PLAYER_FINISHED = 'player_finished',
+  FINISH_GAME = 'finish_game',
 }
 
 // Admin Settings Types
