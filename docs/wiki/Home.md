@@ -48,7 +48,7 @@ AlexDrikkelek is a progressive web application (PWA) that brings the classic boa
 - Node.js 18+ with Fastify framework
 - Socket.IO for WebSocket communication
 - Azure SQL Database for data persistence
-- Azure Cache for Redis for session management
+- In-memory storage for session management (single instance with sticky sessions)
 - Azure Blob Storage for media assets
 
 ## Project Structure
@@ -147,4 +147,4 @@ For questions, bug reports, or feature requests:
 
 ---
 
-**Last updated:** 13-11-2025
+**Last updated:** 17-11-2025
