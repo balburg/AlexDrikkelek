@@ -49,6 +49,13 @@ export default function AdminDashboardPage() {
       color: 'bg-accent-yellow',
     },
     {
+      title: 'Board Generator',
+      description: 'Test procedural board generation',
+      icon: '🎲',
+      href: '/admin/board-generator',
+      color: 'bg-purple-500',
+    },
+    {
       title: 'Game Statistics',
       description: 'View game data and analytics',
       icon: '📊',

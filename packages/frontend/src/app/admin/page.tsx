@@ -176,6 +176,12 @@ export default function AdminSettingsPage() {
             🌈 Styles
           </a>
           <a
+            href="/admin/board-generator"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
+          >
+            🎲 Board Generator
+          </a>
+          <a
             href="/admin/statistics"
             className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-game hover:shadow-xl transition-all"
           >

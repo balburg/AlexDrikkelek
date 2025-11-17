@@ -447,6 +447,24 @@ async function start() {
     }
   });
 
+  // Board Generation Testing route (Admin - Protected)
+  fastify.post('/api/admin/generate-board', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const { seed, boardSize } = request.body as { seed?: string; boardSize?: number };
+      
+      // Use provided seed or generate random one
+      const finalSeed = seed || `test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const finalSize = boardSize && boardSize >= 20 && boardSize <= 100 ? boardSize : 50;
+      
+      const board = await gameService.generateBoard(finalSeed, finalSize);
+      reply.type('application/json');
+      return board;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to generate board';
+      reply.code(500).type('application/json').send({ error: message });
+    }
+  });
+
 
   // Start the server
   try {
