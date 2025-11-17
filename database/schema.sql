@@ -42,7 +42,7 @@ CREATE TABLE RoomPlayers (
 -- Challenges Table
 CREATE TABLE Challenges (
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    Type NVARCHAR(20) NOT NULL,
+    ChallengeType NVARCHAR(20) NOT NULL,
     Category NVARCHAR(50) NOT NULL,
     AgeRating NVARCHAR(20) NOT NULL DEFAULT 'ALL',
     Question NVARCHAR(1000),
@@ -52,7 +52,7 @@ CREATE TABLE Challenges (
     Points INT DEFAULT 0,
     IsActive BIT DEFAULT 1,
     CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
-    CHECK (Type IN ('TRIVIA', 'ACTION', 'DARE', 'DRINKING')),
+    CHECK (ChallengeType IN ('TRIVIA', 'ACTION', 'DARE', 'DRINKING')),
     CHECK (AgeRating IN ('ALL', 'TEEN', 'ADULT'))
 );
 
@@ -74,7 +74,7 @@ CREATE INDEX IX_GameRooms_Code ON GameRooms(Code);
 CREATE INDEX IX_GameRooms_Status ON GameRooms(Status);
 CREATE INDEX IX_RoomPlayers_RoomId ON RoomPlayers(RoomId);
 CREATE INDEX IX_RoomPlayers_PlayerId ON RoomPlayers(PlayerId);
-CREATE INDEX IX_Challenges_Type ON Challenges(Type);
+CREATE INDEX IX_Challenges_ChallengeType ON Challenges(ChallengeType);
 CREATE INDEX IX_Challenges_Category ON Challenges(Category);
 CREATE INDEX IX_Challenges_AgeRating ON Challenges(AgeRating);
 
@@ -112,7 +112,7 @@ CREATE INDEX IX_CustomSpaces_Type ON CustomSpaces(Type);
 CREATE INDEX IX_CustomSpacePacks_IsActive ON CustomSpacePacks(IsActive);
 
 -- Sample Challenges Data
-INSERT INTO Challenges (Type, Category, AgeRating, Question, Answers, CorrectAnswer, Points)
+INSERT INTO Challenges (ChallengeType, Category, AgeRating, Question, Answers, CorrectAnswer, Points)
 VALUES 
     ('TRIVIA', 'General Knowledge', 'ALL', 'What is the capital of France?', '["Paris", "London", "Berlin", "Madrid"]', 0, 10),
     ('TRIVIA', 'Science', 'ALL', 'What is H2O?', '["Water", "Oxygen", "Hydrogen", "Carbon Dioxide"]', 0, 10),
