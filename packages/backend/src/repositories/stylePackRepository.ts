@@ -71,7 +71,8 @@ export async function getAllStylePacks(): Promise<StylePack[]> {
     
     return result.recordset.map(mapRowToStylePack);
   } catch (error) {
-    console.error('Error getting all style packs from database:', error);
+    // Log at debug level since service layer will handle fallback
+    console.debug('Database query failed in getAllStylePacks:', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 }
@@ -92,7 +93,8 @@ export async function getActiveStylePack(): Promise<StylePack | null> {
     
     return mapRowToStylePack(result.recordset[0]);
   } catch (error) {
-    console.error('Error getting active style pack from database:', error);
+    // Log at debug level since service layer will handle fallback
+    console.debug('Database query failed in getActiveStylePack:', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 }
@@ -114,7 +116,8 @@ export async function getStylePackById(id: string): Promise<StylePack | null> {
     
     return mapRowToStylePack(result.recordset[0]);
   } catch (error) {
-    console.error('Error getting style pack by ID from database:', error);
+    // Log at debug level since service layer will handle fallback
+    console.debug('Database query failed in getStylePackById:', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 }
@@ -343,7 +346,8 @@ export async function getDefaultStylePack(): Promise<StylePack | null> {
     
     return mapRowToStylePack(result.recordset[0]);
   } catch (error) {
-    console.error('Error getting default style pack from database:', error);
+    // Log at debug level since service layer will handle fallback
+    console.debug('Database query failed in getDefaultStylePack:', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 }

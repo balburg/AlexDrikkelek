@@ -20,12 +20,45 @@ const config: sql.config = {
 };
 
 let pool: sql.ConnectionPool | null = null;
+let connectionError: Error | null = null;
+
+/**
+ * Check if database configuration is valid
+ */
+function isDatabaseConfigured(): boolean {
+  return !!(
+    process.env.DB_SERVER &&
+    process.env.DB_DATABASE &&
+    process.env.DB_USER &&
+    process.env.DB_PASSWORD
+  );
+}
 
 export async function getConnection(): Promise<sql.ConnectionPool> {
-  if (!pool) {
-    pool = await sql.connect(config);
+  // Check if database is configured
+  if (!isDatabaseConfigured()) {
+    throw new Error('Database not configured. Please set DB_SERVER, DB_DATABASE, DB_USER, and DB_PASSWORD environment variables.');
   }
-  return pool;
+
+  // Return existing connection if available
+  if (pool) {
+    return pool;
+  }
+
+  // If previous connection attempt failed, throw the cached error
+  if (connectionError) {
+    throw connectionError;
+  }
+
+  // Attempt to connect
+  try {
+    pool = await sql.connect(config);
+    return pool;
+  } catch (error) {
+    // Cache the error to avoid repeated connection attempts
+    connectionError = error instanceof Error ? error : new Error('Database connection failed');
+    throw connectionError;
+  }
 }
 
 export async function closeConnection(): Promise<void> {
