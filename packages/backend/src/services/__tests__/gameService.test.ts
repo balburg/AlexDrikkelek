@@ -28,6 +28,7 @@ import {
   removePlayer,
   promoteNewHost,
   startGame,
+  finishGame,
 } from '../gameService';
 
 describe('gameService', () => {
@@ -613,6 +614,95 @@ describe('gameService', () => {
       const updatedRoom = await startGame('nonexistent');
 
       expect(updatedRoom).toBeNull();
+    });
+  });
+
+  describe('finishGame', () => {
+    it('should reset game to waiting status', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            playerSessionId: 'session1',
+            roomId: 'room1',
+            name: 'Player 1',
+            position: 49,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date(),
+          },
+          {
+            id: 'player2',
+            playerSessionId: 'session2',
+            roomId: 'room1',
+            name: 'Player 2',
+            position: 30,
+            isHost: false,
+            isConnected: true,
+            joinedAt: new Date(),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.PLAYING,
+        currentTurn: 1,
+        board: generateBoardSync('test_seed'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockResolvedValue(JSON.stringify(roomData));
+
+      const result = await finishGame('room1');
+
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(RoomStatus.WAITING);
+      expect(result?.currentTurn).toBe(0);
+      expect(result?.players[0].position).toBe(0);
+      expect(result?.players[1].position).toBe(0);
+    });
+
+    it('should generate a new board', async () => {
+      const roomData: GameRoom = {
+        id: 'room1',
+        code: 'ABC123',
+        hostId: 'player1',
+        players: [
+          {
+            id: 'player1',
+            playerSessionId: 'session1',
+            roomId: 'room1',
+            name: 'Player 1',
+            position: 49,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date(),
+          },
+        ],
+        maxPlayers: 10,
+        status: RoomStatus.PLAYING,
+        currentTurn: 0,
+        board: generateBoardSync('old_seed'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGet.mockResolvedValue(JSON.stringify(roomData));
+
+      const result = await finishGame('room1');
+
+      expect(result).not.toBeNull();
+      expect(result?.board.seed).not.toBe('old_seed');
+    });
+
+    it('should return null if room not found', async () => {
+      mockGet.mockResolvedValue(null);
+
+      const result = await finishGame('nonexistent');
+
+      expect(result).toBeNull();
     });
   });
 });
