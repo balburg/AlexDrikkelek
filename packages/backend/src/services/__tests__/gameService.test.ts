@@ -1,13 +1,14 @@
 import { TileType, GameRoom, RoomStatus } from '../../models/types';
 
-// Mock Redis - create a single mock instance
+// Mock in-memory store - create a single mock instance
 const mockGet = jest.fn();
 const mockSetex = jest.fn();
 
-jest.mock('../../config/redis', () => ({
-  getRedisClient: jest.fn(() => ({
+jest.mock('../../config/inMemoryStore', () => ({
+  getInMemoryStore: jest.fn(() => ({
     setex: mockSetex,
     get: mockGet,
+    keys: jest.fn().mockResolvedValue([]),
   })),
 }));
 

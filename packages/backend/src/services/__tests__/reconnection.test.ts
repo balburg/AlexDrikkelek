@@ -1,11 +1,11 @@
 import { GameRoom, RoomStatus } from '../../models/types';
 
-// Mock Redis
+// Mock in-memory store
 const mockGet = jest.fn();
 const mockSetex = jest.fn();
 
-jest.mock('../../config/redis', () => ({
-  getRedisClient: jest.fn(() => ({
+jest.mock('../../config/inMemoryStore', () => ({
+  getInMemoryStore: jest.fn(() => ({
     setex: mockSetex,
     get: mockGet,
   })),

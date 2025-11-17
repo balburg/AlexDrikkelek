@@ -34,19 +34,20 @@ This is a monorepo containing:
 #### Backend
 - **Runtime**: Node.js 18+
 - **Framework**: Fastify
-- **WebSockets**: Socket.IO
+- **WebSockets**: Socket.IO (in-memory adapter for single instance)
 - **Database**: Azure SQL Database
-- **Caching**: Azure Cache for Redis
 - **Storage**: Azure Blob Storage
+- **State Management**: In-memory (single instance with sticky sessions)
 
 #### Azure Services
-- **Hosting**: Azure App Service (Backend), Azure Static Web Apps (Frontend)
+- **Hosting**: Azure App Service (Backend with ARR affinity/sticky sessions enabled), Azure Static Web Apps (Frontend)
 - **Database**: Azure SQL Database
-- **Cache**: Azure Cache for Redis
 - **Storage**: Azure Blob Storage
 - **Auth**: Anonymous access (no authentication required)
 - **Observability**: Azure Monitor + Application Insights
 - **CI/CD**: Azure DevOps Pipelines
+
+**Note**: The backend runs as a single instance with in-memory state management. ARR affinity (sticky sessions) must be enabled on Azure App Service to ensure all WebSocket connections for a room stay on the same instance.
 
 ## 🚀 Getting Started
 
@@ -137,7 +138,8 @@ docker-compose up
 This will start:
 - Frontend on http://localhost:3000
 - Backend on http://localhost:3001
-- Redis on localhost:6379
+
+**Note**: Redis has been removed. The backend now uses in-memory state management for single-instance deployment.
 
 ## 🎯 Key Features
 

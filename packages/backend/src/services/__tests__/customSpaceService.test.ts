@@ -1,6 +1,6 @@
 import { CustomSpaceType } from '../../models/types';
 
-// Mock Redis
+// Mock in-memory store
 const mockGet = jest.fn();
 const mockSet = jest.fn();
 const mockDel = jest.fn();
@@ -8,8 +8,8 @@ const mockSadd = jest.fn();
 const mockSrem = jest.fn();
 const mockSmembers = jest.fn();
 
-jest.mock('../../config/redis', () => ({
-  getRedisClient: jest.fn(() => ({
+jest.mock('../../config/inMemoryStore', () => ({
+  getInMemoryStore: jest.fn(() => ({
     get: mockGet,
     set: mockSet,
     del: mockDel,

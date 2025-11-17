@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType, Challenge } from './models/types';
+import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType, Challenge, RoomStatus } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
 import * as settingsService from './services/settingsService';
@@ -37,9 +37,26 @@ async function start() {
     credentials: true,
   });
 
-  // Health check endpoint
+  // Health check endpoint with monitoring
   fastify.get('/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    const rooms = await gameService.getAllRooms();
+    const activeRooms = rooms.filter(room => 
+      room.status === RoomStatus.PLAYING || room.status === RoomStatus.WAITING
+    );
+    const totalPlayers = rooms.reduce((sum, room) => sum + room.players.length, 0);
+    const connectedPlayers = rooms.reduce((sum, room) => 
+      sum + room.players.filter(p => p.isConnected).length, 0);
+    
+    return { 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      stats: {
+        totalRooms: rooms.length,
+        activeRooms: activeRooms.length,
+        totalPlayers,
+        connectedPlayers,
+      }
+    };
   });
 
   // API routes

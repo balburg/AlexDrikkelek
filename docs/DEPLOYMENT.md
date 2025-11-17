@@ -46,19 +46,7 @@ az sql server firewall-rule create \
   --end-ip-address 0.0.0.0
 ```
 
-### 3. Azure Cache for Redis
-
-```bash
-az redis create \
-  --name alexdrikkelek-redis \
-  --resource-group alexdrikkelek-rg \
-  --location westeurope \
-  --sku Basic \
-  --vm-size c0 \
-  --enable-non-ssl-port false
-```
-
-### 4. Azure Blob Storage
+### 3. Azure Blob Storage
 
 ```bash
 # Create storage account
@@ -75,7 +63,7 @@ az storage container create \
   --public-access blob
 ```
 
-### 5. Azure App Service (Backend)
+### 4. Azure App Service (Backend)
 
 ```bash
 # Create App Service Plan
@@ -92,6 +80,18 @@ az webapp create \
   --plan alexdrikkelek-plan \
   --runtime "NODE|18-lts"
 
+# CRITICAL: Enable ARR Affinity (Sticky Sessions) for single-instance in-memory state
+az webapp update \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --client-affinity-enabled true
+
+# Set instance count to 1 (required for in-memory state)
+az appservice plan update \
+  --name alexdrikkelek-plan \
+  --resource-group alexdrikkelek-rg \
+  --number-of-workers 1
+
 # Configure app settings
 az webapp config appsettings set \
   --name alexdrikkelek-backend \
@@ -103,7 +103,12 @@ az webapp config appsettings set \
     DB_DATABASE=alexdrikkelek
 ```
 
-### 6. Azure Static Web Apps (Frontend)
+**Important Notes:**
+- ARR affinity is **required** because the backend stores game state in-memory
+- Running multiple instances will cause issues - keep at 1 instance
+- For more details, see the "Single-Instance Architecture" section below
+
+### 5. Azure Static Web Apps (Frontend)
 
 ```bash
 az staticwebapp create \
@@ -116,11 +121,9 @@ az staticwebapp create \
   --output-location ".next"
 ```
 
-### 7. Application Insights
+### 6. Application Insights
 
 **Note:** Authentication is intentionally disabled. The game operates anonymously - players join with just a name and avatar.
-
-### 8. Application Insights
 
 ```bash
 az monitor app-insights component create \
@@ -175,7 +178,6 @@ In Azure DevOps pipeline:
 ```
 AZURE_STATIC_WEB_APPS_API_TOKEN: <from Static Web Apps>
 DB_PASSWORD: <your-db-password>
-REDIS_PASSWORD: <your-redis-key>
 ```
 
 ## Environment Variables
@@ -197,20 +199,12 @@ DB_USER=sqladmin
 DB_PASSWORD=<password>
 DB_ENCRYPT=true
 
-# Redis
-REDIS_HOST=alexdrikkelek-redis.redis.cache.windows.net
-REDIS_PORT=6380
-REDIS_PASSWORD=<redis-key>
-REDIS_TLS=true
-
 # Storage
 AZURE_STORAGE_CONNECTION_STRING=<connection-string>
 AZURE_STORAGE_CONTAINER=avatars
 
-# AD B2C
-AZURE_AD_B2C_TENANT_NAME=<tenant>
-AZURE_AD_B2C_CLIENT_ID=<client-id>
-AZURE_AD_B2C_CLIENT_SECRET=<client-secret>
+# Note: Redis variables removed - backend now uses in-memory state
+# Ensure ARR affinity is enabled on App Service for sticky sessions
 ```
 
 ### Frontend (.env.production)
@@ -218,10 +212,6 @@ AZURE_AD_B2C_CLIENT_SECRET=<client-secret>
 ```bash
 NEXT_PUBLIC_API_URL=https://alexdrikkelek-backend.azurewebsites.net
 NEXT_PUBLIC_SOCKET_URL=https://alexdrikkelek-backend.azurewebsites.net
-
-NEXT_PUBLIC_AZURE_AD_B2C_TENANT_NAME=<tenant>
-NEXT_PUBLIC_AZURE_AD_B2C_CLIENT_ID=<client-id>
-NEXT_PUBLIC_AZURE_AD_B2C_POLICY_NAME=B2C_1_signupsignin
 
 NEXT_PUBLIC_ENABLE_CHROMECAST=true
 NEXT_PUBLIC_MAX_PLAYERS=10
@@ -339,25 +329,120 @@ az webapp config hostname add \
 - Verify credentials
 - Check connection string format
 
-## Scaling
+## Single-Instance Architecture
 
-### Auto-scaling Backend
+### Overview
+
+The backend uses **in-memory state management** instead of Redis, simplifying the infrastructure. This works well for:
+- Development and staging environments
+- Events and parties with 2-10 players per room
+- Modest traffic levels (up to ~500 concurrent players on appropriate hardware)
+
+### Critical Configuration
+
+**ARR Affinity (Sticky Sessions) is REQUIRED:**
+
+```bash
+# Enable via CLI
+az webapp update \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --client-affinity-enabled true
+
+# Or via Portal: Configuration → General settings → ARR affinity → On
+```
+
+**Why?** Game rooms are stored in server memory. Without sticky sessions, WebSocket connections may route to different instances that don't have the room data, causing "Room not found" errors.
+
+### Instance Count
+
+**Must run exactly 1 instance:**
 
 ```bash
 az appservice plan update \
   --name alexdrikkelek-plan \
   --resource-group alexdrikkelek-rg \
-  --number-of-workers 3
+  --number-of-workers 1
+```
 
-# Enable auto-scale
-az monitor autoscale create \
+Running multiple instances without state synchronization will cause data inconsistency.
+
+### Monitoring Active Rooms
+
+Use the `/health` endpoint to monitor server state:
+
+```bash
+curl https://alexdrikkelek-backend.azurewebsites.net/health
+```
+
+Response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-11-17T09:41:48.141Z",
+  "stats": {
+    "totalRooms": 5,
+    "activeRooms": 3,
+    "totalPlayers": 12,
+    "connectedPlayers": 10
+  }
+}
+```
+
+Set up Application Insights alerts for:
+- `totalRooms > 100` (may indicate memory pressure)
+- `connectedPlayers < 0.5 * totalPlayers` (connection issues)
+
+### Deployment Considerations
+
+**During deployments:**
+1. All active game rooms will be lost (they're in memory)
+2. Deploy during low-traffic periods
+3. Communicate scheduled maintenance to users
+4. Consider implementing a "maintenance mode" message
+
+**Session expiry:**
+- Rooms automatically expire after 4 hours of inactivity
+- Players can reconnect within 60 seconds of disconnect
+
+### Future Scaling Options
+
+If you need to scale beyond a single instance:
+
+1. **Re-add Redis or Azure SignalR** for distributed state
+2. **Room-based sharding** - route specific room codes to specific instances
+3. **Persist to SQL more frequently** - reconstruct state from database
+
+For current use case (parties/events), single instance is sufficient and simplifies operations.
+
+## Scaling
+
+**Note:** With in-memory state, auto-scaling is NOT recommended. Keep at 1 instance.
+
+### Vertical Scaling (Recommended)
+
+Increase the App Service Plan SKU for better performance:
+
+```bash
+# Upgrade to Standard S1 for more resources
+az appservice plan update \
+  --name alexdrikkelek-plan \
   --resource-group alexdrikkelek-rg \
-  --resource alexdrikkelek-plan \
-  --resource-type Microsoft.Web/serverfarms \
-  --name autoscale-plan \
-  --min-count 1 \
-  --max-count 5 \
-  --count 1
+  --sku S1
+```
+
+Recommended SKUs:
+- **B1**: Up to ~50 concurrent players (development)
+- **S1**: Up to ~200 concurrent players (small events)
+- **P1v2**: Up to ~500 concurrent players (large events)
+
+### Horizontal Scaling (Not Recommended)
+
+Do NOT use auto-scaling unless you implement distributed state management:
+
+```bash
+# DON'T DO THIS without implementing Redis/SignalR first!
+# az monitor autoscale create ...
 ```
 
 ## Monitoring
