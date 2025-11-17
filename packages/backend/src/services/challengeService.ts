@@ -1,7 +1,9 @@
 import { Challenge, ChallengeType, AgeRating } from '../models/types';
+import * as challengeRepository from '../repositories/challengeRepository';
+import { v4 as uuidv4 } from 'uuid';
 
-// Sample challenge data - in production, this would come from the database
-const challenges: Challenge[] = [
+// Built-in challenge data as fallback when database is unavailable
+const BUILT_IN_CHALLENGES: Challenge[] = [
   // Trivia challenges
   {
     id: 'trivia_1',
@@ -153,98 +155,124 @@ const challenges: Challenge[] = [
 /**
  * Get a random challenge by type and age rating
  */
-export function getRandomChallenge(
+export async function getRandomChallenge(
   type?: ChallengeType,
   ageRating: AgeRating = AgeRating.ALL
-): Challenge {
-  // Filter challenges by type and age rating
-  let filtered = challenges.filter(c => {
-    // Check age rating - ALL can be played by everyone
-    const ageMatch = c.ageRating === AgeRating.ALL || c.ageRating === ageRating;
+): Promise<Challenge> {
+  try {
+    // Try to get challenges from database
+    const challenges = await challengeRepository.getChallengesByTypeAndAge(type, ageRating);
     
-    // Check type if specified
-    const typeMatch = !type || c.type === type;
+    if (challenges.length > 0) {
+      const randomIndex = Math.floor(Math.random() * challenges.length);
+      return challenges[randomIndex];
+    }
     
-    return ageMatch && typeMatch;
-  });
-  
-  // If no challenges match, fall back to ALL age rating
-  if (filtered.length === 0) {
-    filtered = challenges.filter(c => c.ageRating === AgeRating.ALL);
+    // If no challenges match in database, try without type filter
+    if (type) {
+      const allChallenges = await challengeRepository.getChallengesByTypeAndAge(undefined, ageRating);
+      if (allChallenges.length > 0) {
+        const randomIndex = Math.floor(Math.random() * allChallenges.length);
+        return allChallenges[randomIndex];
+      }
+    }
+    
+    // If still no challenges, fall back to built-in challenges
+    throw new Error('No challenges found in database');
+  } catch (error) {
+    // Fallback to built-in challenges
+    console.warn('Database unavailable, using built-in challenges as fallback:', 
+      error instanceof Error ? error.message : 'Unknown error');
+    
+    let filtered = BUILT_IN_CHALLENGES.filter(c => {
+      const ageMatch = c.ageRating === AgeRating.ALL || c.ageRating === ageRating;
+      const typeMatch = !type || c.type === type;
+      return ageMatch && typeMatch;
+    });
+    
+    if (filtered.length === 0) {
+      filtered = BUILT_IN_CHALLENGES.filter(c => c.ageRating === AgeRating.ALL);
+    }
+    
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    return filtered[randomIndex];
   }
-  
-  // Return a random challenge from the filtered list
-  const randomIndex = Math.floor(Math.random() * filtered.length);
-  return filtered[randomIndex];
 }
 
 /**
  * Get a challenge by ID
  */
-export function getChallengeById(id: string): Challenge | undefined {
-  return challenges.find(c => c.id === id);
+export async function getChallengeById(id: string): Promise<Challenge | undefined> {
+  try {
+    const challenge = await challengeRepository.getChallengeById(id);
+    return challenge || undefined;
+  } catch (error) {
+    // Fallback to built-in challenges
+    console.warn('Database unavailable, using built-in challenges as fallback:', 
+      error instanceof Error ? error.message : 'Unknown error');
+    return BUILT_IN_CHALLENGES.find(c => c.id === id);
+  }
 }
 
 /**
  * Validate a trivia answer
  */
-export function validateTriviaAnswer(challengeId: string, answerIndex: number): boolean {
-  const challenge = getChallengeById(challengeId);
+export async function validateTriviaAnswer(challengeId: string, answerIndex: number): Promise<boolean> {
+  const challenge = await getChallengeById(challengeId);
   if (!challenge || challenge.type !== ChallengeType.TRIVIA) {
     return false;
   }
   
-  return challenge.correctAnswer === answerIndex;
+  return 'correctAnswer' in challenge && challenge.correctAnswer === answerIndex;
 }
 
 /**
  * Get all challenges
  */
-export function getAllChallenges(): Challenge[] {
-  return challenges;
+export async function getAllChallenges(): Promise<Challenge[]> {
+  try {
+    return await challengeRepository.getAllChallenges();
+  } catch (error) {
+    console.warn('Database unavailable, using built-in challenges as fallback:', 
+      error instanceof Error ? error.message : 'Unknown error');
+    return BUILT_IN_CHALLENGES;
+  }
 }
 
 /**
  * Create a new challenge
  */
-export function createChallenge(data: Omit<Challenge, 'id'>): Challenge {
-  const newChallenge: Challenge = {
-    id: `${data.type.toLowerCase()}_${Date.now()}`,
-    ...data,
-  };
-  
-  challenges.push(newChallenge);
-  return newChallenge;
+export async function createChallenge(data: Omit<Challenge, 'id'>): Promise<Challenge> {
+  try {
+    const id = uuidv4();
+    return await challengeRepository.createChallenge(id, data);
+  } catch (error) {
+    console.error('Error creating challenge in database:', error);
+    throw error;
+  }
 }
 
 /**
  * Update a challenge
  */
-export function updateChallenge(id: string, updates: Partial<Omit<Challenge, 'id'>>): Challenge | null {
-  const index = challenges.findIndex(c => c.id === id);
-  
-  if (index === -1) {
-    return null;
+export async function updateChallenge(id: string, updates: Partial<Omit<Challenge, 'id'>>): Promise<Challenge | null> {
+  try {
+    return await challengeRepository.updateChallenge(id, updates);
+  } catch (error) {
+    console.error('Error updating challenge in database:', error);
+    throw error;
   }
-  
-  challenges[index] = {
-    ...challenges[index],
-    ...updates,
-  };
-  
-  return challenges[index];
 }
 
 /**
  * Delete a challenge
  */
-export function deleteChallenge(id: string): boolean {
-  const index = challenges.findIndex(c => c.id === id);
-  
-  if (index === -1) {
+export async function deleteChallenge(id: string): Promise<boolean> {
+  try {
+    await challengeRepository.deleteChallenge(id);
+    return true;
+  } catch (error) {
+    console.error('Error deleting challenge from database:', error);
     return false;
   }
-  
-  challenges.splice(index, 1);
-  return true;
 }

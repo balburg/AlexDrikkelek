@@ -384,7 +384,7 @@ async function start() {
   // Challenges routes (Admin - Protected)
   fastify.get('/api/admin/challenges', { preHandler: authMiddleware }, async (request, reply) => {
     try {
-      const challenges = challengeService.getAllChallenges();
+      const challenges = await challengeService.getAllChallenges();
       reply.type('application/json');
       return challenges;
     } catch (error) {
@@ -395,7 +395,7 @@ async function start() {
   fastify.post('/api/admin/challenges', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const challengeData = request.body as Omit<Challenge, 'id'>;
-      const challenge = challengeService.createChallenge(challengeData);
+      const challenge = await challengeService.createChallenge(challengeData);
       reply.code(201).type('application/json');
       return challenge;
     } catch (error) {
@@ -408,7 +408,7 @@ async function start() {
     try {
       const { id } = request.params as { id: string };
       const updates = request.body as Partial<Omit<Challenge, 'id'>>;
-      const challenge = challengeService.updateChallenge(id, updates);
+      const challenge = await challengeService.updateChallenge(id, updates);
       if (!challenge) {
         reply.code(404).type('application/json').send({ error: 'Challenge not found' });
         return;
@@ -424,7 +424,7 @@ async function start() {
   fastify.delete('/api/admin/challenges/:id', { preHandler: authMiddleware }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
-      const success = challengeService.deleteChallenge(id);
+      const success = await challengeService.deleteChallenge(id);
       if (!success) {
         reply.code(404).type('application/json').send({ error: 'Challenge not found' });
         return;
@@ -641,7 +641,7 @@ async function start() {
             if (tile.type === TileType.CHALLENGE) {
               challengeType = ChallengeType.TRIVIA;
             }
-            const challenge = challengeService.getRandomChallenge(challengeType);
+            const challenge = await challengeService.getRandomChallenge(challengeType);
             
             io.to(data.roomId).emit(SocketEvent.CHALLENGE_STARTED, {
               playerId: data.playerId,
@@ -689,7 +689,7 @@ async function start() {
           // Validate trivia answer if provided
           let isCorrect = data.success;
           if (data.answer !== undefined) {
-            isCorrect = challengeService.validateTriviaAnswer(data.challengeId, data.answer);
+            isCorrect = await challengeService.validateTriviaAnswer(data.challengeId, data.answer);
           }
 
           // Broadcast challenge result
