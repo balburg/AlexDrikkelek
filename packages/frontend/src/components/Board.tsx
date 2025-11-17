@@ -11,7 +11,70 @@ interface BoardProps {
   players: Player[];
 }
 
+/**
+ * Generate spiral order for board tiles
+ * Returns an array where index represents the spiral order and value is the tile position
+ * Starts from outer edge and spirals inward to center
+ */
+function generateSpiralOrder(numTiles: number): number[] {
+  // Determine grid dimensions - use rectangular grid
+  const cols = 10; // Fixed columns for consistency with current grid
+  const rows = Math.ceil(numTiles / cols);
+  
+  const grid: number[][] = Array(rows).fill(0).map(() => Array(cols).fill(-1));
+  const spiralOrder: number[] = [];
+  
+  let top = 0, bottom = rows - 1;
+  let left = 0, right = cols - 1;
+  let position = 0;
+  
+  // Build spiral from outside to inside
+  while (top <= bottom && left <= right && position < numTiles) {
+    // Move right along top row
+    for (let col = left; col <= right && position < numTiles; col++) {
+      grid[top][col] = position++;
+      spiralOrder.push(grid[top][col]);
+    }
+    top++;
+    
+    // Move down along right column
+    for (let row = top; row <= bottom && position < numTiles; row++) {
+      grid[row][right] = position++;
+      spiralOrder.push(grid[row][right]);
+    }
+    right--;
+    
+    // Move left along bottom row
+    if (top <= bottom) {
+      for (let col = right; col >= left && position < numTiles; col--) {
+        grid[bottom][col] = position++;
+        spiralOrder.push(grid[bottom][col]);
+      }
+      bottom--;
+    }
+    
+    // Move up along left column
+    if (left <= right) {
+      for (let row = bottom; row >= top && position < numTiles; row--) {
+        grid[row][left] = position++;
+        spiralOrder.push(grid[row][left]);
+      }
+      left++;
+    }
+  }
+  
+  return spiralOrder;
+}
+
 export default function Board({ board, players }: BoardProps) {
+  // Generate spiral order for tiles
+  const spiralOrder = generateSpiralOrder(board.tiles.length);
+  
+  // Create a reordered tiles array for spiral display
+  const reorderedTiles = spiralOrder.map(position => 
+    board.tiles.find(tile => tile.position === position)
+  ).filter(tile => tile !== undefined);
+  
   // Get tile color based on type
   const getTileColor = (type: TileType): string => {
     switch (type) {
@@ -68,7 +131,8 @@ export default function Board({ board, players }: BoardProps) {
   return (
     <div className="w-full">
       <div className="grid grid-cols-5 md:grid-cols-10 gap-2 md:gap-3">
-        {board.tiles.map((tile, index) => {
+        {reorderedTiles.map((tile) => {
+          if (!tile) return null;
           const playersOnTile = getPlayersAtPosition(tile.position);
           
           return (
