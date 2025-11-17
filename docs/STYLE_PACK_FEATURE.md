@@ -78,12 +78,30 @@ Spooky orange and black theme with:
 - Secondary: Dark Purple-Black (#1A1A2E)
 - Gradient background effect
 
+## Database Setup
+
+Before using the style pack system, ensure the database is properly configured:
+
+1. **Run Database Schema**: Execute `database/schema.sql` to create the StylePacks table
+2. **Seed Default Themes**: Execute `database/seed_style_packs.sql` to populate the three built-in themes
+3. **Configure Connection**: Set database connection variables in `.env`:
+   ```
+   DB_SERVER=your-server.database.windows.net
+   DB_DATABASE=alexdrikkelek
+   DB_USER=your-username
+   DB_PASSWORD=your-password
+   DB_ENCRYPT=true
+   ```
+
+See `database/README.md` for detailed setup instructions.
+
 ## Theme Application
 
 Themes are applied globally across the application using CSS custom properties:
 - All UI components automatically use the active theme colors
 - Changes take effect immediately without page refresh
-- Themes persist across sessions (stored in Redis)
+- Themes persist in the SQL Server database
+- The active theme in the database dictates the application's visual style
 
 ## API Endpoints
 
@@ -143,10 +161,12 @@ Returns the currently active theme colors and name. This endpoint is public and 
 ## Technical Implementation
 
 ### Backend
-- **Storage**: Redis for persistent theme storage
-- **Service**: `stylePackService.ts` handles all CRUD operations
+- **Storage**: Azure SQL Database for persistent theme storage
+- **Repository**: `stylePackRepository.ts` handles database operations
+- **Service**: `stylePackService.ts` handles business logic and CRUD operations
 - **Validation**: Input validation for color codes and required fields
 - **Protection**: Built-in themes and active themes are protected from deletion
+- **Fallback**: Returns built-in themes if database is unavailable
 
 ### Frontend
 - **ThemeProvider**: React context provides theme to all components

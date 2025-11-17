@@ -6,6 +6,7 @@ This directory contains the database schema and seed data for AlexDrikkelek.
 
 - **schema.sql** - Main database schema for Azure SQL Database
 - **seed_custom_space_packs.sql** - Seed data for custom space packs
+- **seed_style_packs.sql** - Seed data for style packs (themes)
 
 ## Setup Instructions
 
@@ -17,7 +18,22 @@ Run the schema.sql file to create all the necessary tables:
 -- Execute schema.sql in your Azure SQL Database
 ```
 
-### 2. Populate Custom Space Packs (Optional)
+### 2. Populate Style Packs (Recommended)
+
+After creating the schema, populate the database with default style packs (themes):
+
+```sql
+-- Execute seed_style_packs.sql
+```
+
+This will create three built-in style packs:
+- **Default** - The original AlexDrikkelek vibrant theme (active by default)
+- **Christmas** - Festive red and green holiday theme
+- **Halloween** - Spooky orange and black theme
+
+The Default pack is marked as active and will be used as the application's theme.
+
+### 3. Populate Custom Space Packs (Optional)
 
 After creating the schema, you can populate the database with pre-made custom space packs:
 
@@ -72,6 +88,9 @@ Spooky Halloween-themed challenges:
 
 ## Notes
 
+- Style packs (themes) are now stored in the SQL Server database
+- The active style pack in the database dictates the application's visual theme
+- The backend service uses the database for style pack CRUD operations
 - The backend service uses an in-memory store for game state management
 - Custom space packs in the database can be synced to the in-memory store via API calls
 - All custom spaces include color-coded backgrounds matching their space type
