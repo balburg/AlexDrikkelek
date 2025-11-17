@@ -1,22 +1,32 @@
 import { CustomSpaceType } from '../../models/types';
 
-// Mock in-memory store
-const mockGet = jest.fn();
-const mockSet = jest.fn();
-const mockDel = jest.fn();
-const mockSadd = jest.fn();
-const mockSrem = jest.fn();
-const mockSmembers = jest.fn();
+// Mock repository
+const mockGetAllPacks = jest.fn();
+const mockGetActivePacks = jest.fn();
+const mockGetPackById = jest.fn();
+const mockCreatePack = jest.fn();
+const mockUpdatePack = jest.fn();
+const mockDeletePack = jest.fn();
+const mockCreateSpace = jest.fn();
+const mockGetSpaceById = jest.fn();
+const mockUpdateSpace = jest.fn();
+const mockDeleteSpace = jest.fn();
+const mockGetActiveSpaces = jest.fn();
+const mockGetActiveSpacesByType = jest.fn();
 
-jest.mock('../../config/inMemoryStore', () => ({
-  getInMemoryStore: jest.fn(() => ({
-    get: mockGet,
-    set: mockSet,
-    del: mockDel,
-    sadd: mockSadd,
-    srem: mockSrem,
-    smembers: mockSmembers,
-  })),
+jest.mock('../../repositories/customSpaceRepository', () => ({
+  getAllPacks: (...args: unknown[]) => mockGetAllPacks(...args),
+  getActivePacks: (...args: unknown[]) => mockGetActivePacks(...args),
+  getPackById: (...args: unknown[]) => mockGetPackById(...args),
+  createPack: (...args: unknown[]) => mockCreatePack(...args),
+  updatePack: (...args: unknown[]) => mockUpdatePack(...args),
+  deletePack: (...args: unknown[]) => mockDeletePack(...args),
+  createSpace: (...args: unknown[]) => mockCreateSpace(...args),
+  getSpaceById: (...args: unknown[]) => mockGetSpaceById(...args),
+  updateSpace: (...args: unknown[]) => mockUpdateSpace(...args),
+  deleteSpace: (...args: unknown[]) => mockDeleteSpace(...args),
+  getActiveSpaces: (...args: unknown[]) => mockGetActiveSpaces(...args),
+  getActiveSpacesByType: (...args: unknown[]) => mockGetActiveSpacesByType(...args),
 }));
 
 // Mock UUID
@@ -46,8 +56,16 @@ describe('customSpaceService', () => {
 
   describe('createPack', () => {
     it('should create a new custom space pack', async () => {
-      mockSadd.mockResolvedValue(1);
-      mockSet.mockResolvedValue('OK');
+      const mockPack = {
+        id: 'test-uuid-1234',
+        name: 'Test Pack',
+        description: 'A test pack for custom spaces',
+        isActive: false,
+        spaces: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockCreatePack.mockResolvedValue(mockPack);
 
       const pack = await createPack('Test Pack', 'A test pack for custom spaces', false);
 
@@ -60,13 +78,20 @@ describe('customSpaceService', () => {
       });
       expect(pack.createdAt).toBeInstanceOf(Date);
       expect(pack.updatedAt).toBeInstanceOf(Date);
-      expect(mockSadd).toHaveBeenCalledWith('customspace:packs', 'test-uuid-1234');
-      expect(mockSet).toHaveBeenCalled();
+      expect(mockCreatePack).toHaveBeenCalledWith('test-uuid-1234', 'Test Pack', 'A test pack for custom spaces', false);
     });
 
     it('should create an active pack when isActive is true', async () => {
-      mockSadd.mockResolvedValue(1);
-      mockSet.mockResolvedValue('OK');
+      const mockPack = {
+        id: 'test-uuid-1234',
+        name: 'Active Pack',
+        description: 'An active pack',
+        isActive: true,
+        spaces: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockCreatePack.mockResolvedValue(mockPack);
 
       const pack = await createPack('Active Pack', 'An active pack', true);
 
@@ -82,10 +107,10 @@ describe('customSpaceService', () => {
         description: 'Test',
         isActive: false,
         spaces: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
-      mockGet.mockResolvedValue(JSON.stringify(mockPack));
+      mockGetPackById.mockResolvedValue(mockPack);
 
       const pack = await getPackById('pack-1');
 
@@ -93,11 +118,11 @@ describe('customSpaceService', () => {
         id: 'pack-1',
         name: 'Test Pack',
       });
-      expect(mockGet).toHaveBeenCalledWith('customspace:pack:pack-1');
+      expect(mockGetPackById).toHaveBeenCalledWith('pack-1');
     });
 
     it('should return null when pack does not exist', async () => {
-      mockGet.mockResolvedValue(null);
+      mockGetPackById.mockResolvedValue(null);
 
       const pack = await getPackById('non-existent');
 
@@ -107,29 +132,28 @@ describe('customSpaceService', () => {
 
   describe('getAllPacks', () => {
     it('should return all packs', async () => {
-      const mockPack1 = {
-        id: 'pack-1',
-        name: 'Pack 1',
-        description: 'Test',
-        isActive: true,
-        spaces: [],
-        createdAt: new Date('2024-01-01').toISOString(),
-        updatedAt: new Date('2024-01-01').toISOString(),
-      };
-      const mockPack2 = {
-        id: 'pack-2',
-        name: 'Pack 2',
-        description: 'Test',
-        isActive: false,
-        spaces: [],
-        createdAt: new Date('2024-01-02').toISOString(),
-        updatedAt: new Date('2024-01-02').toISOString(),
-      };
+      const mockPacks = [
+        {
+          id: 'pack-2',
+          name: 'Pack 2',
+          description: 'Test',
+          isActive: false,
+          spaces: [],
+          createdAt: new Date('2024-01-02'),
+          updatedAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'pack-1',
+          name: 'Pack 1',
+          description: 'Test',
+          isActive: true,
+          spaces: [],
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-01'),
+        },
+      ];
 
-      mockSmembers.mockResolvedValue(['pack-1', 'pack-2']);
-      mockGet
-        .mockResolvedValueOnce(JSON.stringify(mockPack1))
-        .mockResolvedValueOnce(JSON.stringify(mockPack2));
+      mockGetAllPacks.mockResolvedValue(mockPacks);
 
       const packs = await getAllPacks();
 
@@ -139,7 +163,7 @@ describe('customSpaceService', () => {
     });
 
     it('should return empty array when no packs exist', async () => {
-      mockSmembers.mockResolvedValue([]);
+      mockGetAllPacks.mockResolvedValue([]);
 
       const packs = await getAllPacks();
 
@@ -149,29 +173,19 @@ describe('customSpaceService', () => {
 
   describe('getActivePacks', () => {
     it('should return only active packs', async () => {
-      const mockPack1 = {
-        id: 'pack-1',
-        name: 'Active Pack',
-        description: 'Test',
-        isActive: true,
-        spaces: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      const mockPack2 = {
-        id: 'pack-2',
-        name: 'Inactive Pack',
-        description: 'Test',
-        isActive: false,
-        spaces: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const mockPacks = [
+        {
+          id: 'pack-1',
+          name: 'Active Pack',
+          description: 'Test',
+          isActive: true,
+          spaces: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
 
-      mockSmembers.mockResolvedValue(['pack-1', 'pack-2']);
-      mockGet
-        .mockResolvedValueOnce(JSON.stringify(mockPack1))
-        .mockResolvedValueOnce(JSON.stringify(mockPack2));
+      mockGetActivePacks.mockResolvedValue(mockPacks);
 
       const packs = await getActivePacks();
 
@@ -193,8 +207,14 @@ describe('customSpaceService', () => {
         updatedAt: new Date('2024-01-01'),
       };
 
-      mockGet.mockResolvedValue(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
+      const updatedPack = {
+        ...existingPack,
+        name: 'New Name',
+        description: 'New Description',
+        updatedAt: new Date(),
+      };
+
+      mockUpdatePack.mockResolvedValue(updatedPack);
 
       const updated = await updatePack('pack-1', {
         name: 'New Name',
@@ -204,11 +224,14 @@ describe('customSpaceService', () => {
       expect(updated.name).toBe('New Name');
       expect(updated.description).toBe('New Description');
       expect(updated.id).toBe('pack-1');
-      expect(mockSet).toHaveBeenCalled();
+      expect(mockUpdatePack).toHaveBeenCalledWith('pack-1', {
+        name: 'New Name',
+        description: 'New Description',
+      });
     });
 
     it('should throw error when pack not found', async () => {
-      mockGet.mockResolvedValue(null);
+      mockUpdatePack.mockRejectedValue(new Error('Pack not found'));
 
       await expect(updatePack('non-existent', { name: 'New Name' })).rejects.toThrow('Pack not found');
     });
@@ -226,8 +249,13 @@ describe('customSpaceService', () => {
         updatedAt: new Date(),
       };
 
-      mockGet.mockResolvedValue(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
+      const updatedPack = {
+        ...existingPack,
+        isActive: true,
+        updatedAt: new Date(),
+      };
+
+      mockUpdatePack.mockResolvedValue(updatedPack);
 
       const updated = await togglePackActivation('pack-1', true);
 
@@ -245,8 +273,13 @@ describe('customSpaceService', () => {
         updatedAt: new Date(),
       };
 
-      mockGet.mockResolvedValue(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
+      const updatedPack = {
+        ...existingPack,
+        isActive: false,
+        updatedAt: new Date(),
+      };
+
+      mockUpdatePack.mockResolvedValue(updatedPack);
 
       const updated = await togglePackActivation('pack-1', false);
 
@@ -269,20 +302,16 @@ describe('customSpaceService', () => {
         updatedAt: new Date(),
       };
 
-      mockGet.mockResolvedValue(JSON.stringify(existingPack));
-      mockDel.mockResolvedValue(1);
-      mockSrem.mockResolvedValue(1);
+      mockGetPackById.mockResolvedValue(existingPack);
+      mockDeletePack.mockResolvedValue(undefined);
 
       await deletePack('pack-1');
 
-      expect(mockDel).toHaveBeenCalledWith('customspace:space:space-1');
-      expect(mockDel).toHaveBeenCalledWith('customspace:space:space-2');
-      expect(mockDel).toHaveBeenCalledWith('customspace:pack:pack-1');
-      expect(mockSrem).toHaveBeenCalledWith('customspace:packs', 'pack-1');
+      expect(mockDeletePack).toHaveBeenCalledWith('pack-1');
     });
 
     it('should throw error when pack not found', async () => {
-      mockGet.mockResolvedValue(null);
+      mockGetPackById.mockResolvedValue(null);
 
       await expect(deletePack('non-existent')).rejects.toThrow('Pack not found');
     });
@@ -300,8 +329,20 @@ describe('customSpaceService', () => {
         updatedAt: new Date(),
       };
 
-      mockGet.mockResolvedValue(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
+      const mockSpace = {
+        id: 'test-uuid-1234',
+        name: 'Challenge Space',
+        description: 'A challenge space',
+        type: CustomSpaceType.CHALLENGE,
+        logoUrl: 'http://example.com/logo.png',
+        backgroundColor: '#FF0000',
+        packId: 'pack-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGetPackById.mockResolvedValue(existingPack);
+      mockCreateSpace.mockResolvedValue(mockSpace);
 
       const space = await createSpace(
         'pack-1',
@@ -323,11 +364,11 @@ describe('customSpaceService', () => {
         backgroundColor: '#FF0000',
         packId: 'pack-1',
       });
-      expect(mockSet).toHaveBeenCalledTimes(2); // Once for space, once for updated pack
+      expect(mockCreateSpace).toHaveBeenCalled();
     });
 
     it('should throw error when pack not found', async () => {
-      mockGet.mockResolvedValue(null);
+      mockGetPackById.mockResolvedValue(null);
 
       await expect(
         createSpace('non-existent', 'Space', 'Desc', CustomSpaceType.CHALLENGE)
@@ -337,30 +378,18 @@ describe('customSpaceService', () => {
 
   describe('updateSpace', () => {
     it('should update space properties', async () => {
-      const existingSpace = {
+      const updatedSpace = {
         id: 'space-1',
-        name: 'Old Name',
+        name: 'New Name',
         description: 'Old Desc',
         type: CustomSpaceType.CHALLENGE,
+        logoUrl: 'http://example.com/new-logo.png',
         packId: 'pack-1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const existingPack = {
-        id: 'pack-1',
-        name: 'Test Pack',
-        description: 'Test',
-        isActive: false,
-        spaces: [existingSpace],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockGet
-        .mockResolvedValueOnce(JSON.stringify(existingSpace))
-        .mockResolvedValueOnce(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
+      mockUpdateSpace.mockResolvedValue(updatedSpace);
 
       const updated = await updateSpace('space-1', {
         name: 'New Name',
@@ -369,11 +398,14 @@ describe('customSpaceService', () => {
 
       expect(updated.name).toBe('New Name');
       expect(updated.logoUrl).toBe('http://example.com/new-logo.png');
-      expect(mockSet).toHaveBeenCalledTimes(2); // Once for space, once for pack
+      expect(mockUpdateSpace).toHaveBeenCalledWith('space-1', {
+        name: 'New Name',
+        logoUrl: 'http://example.com/new-logo.png',
+      });
     });
 
     it('should throw error when space not found', async () => {
-      mockGet.mockResolvedValue(null);
+      mockUpdateSpace.mockRejectedValue(new Error('Space not found'));
 
       await expect(updateSpace('non-existent', { name: 'New Name' })).rejects.toThrow('Space not found');
     });
@@ -381,40 +413,15 @@ describe('customSpaceService', () => {
 
   describe('deleteSpace', () => {
     it('should delete a space from pack', async () => {
-      const existingSpace = {
-        id: 'space-1',
-        name: 'Test Space',
-        description: 'Test',
-        type: CustomSpaceType.CHALLENGE,
-        packId: 'pack-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const existingPack = {
-        id: 'pack-1',
-        name: 'Test Pack',
-        description: 'Test',
-        isActive: false,
-        spaces: [existingSpace],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockGet
-        .mockResolvedValueOnce(JSON.stringify(existingSpace))
-        .mockResolvedValueOnce(JSON.stringify(existingPack));
-      mockSet.mockResolvedValue('OK');
-      mockDel.mockResolvedValue(1);
+      mockDeleteSpace.mockResolvedValue(undefined);
 
       await deleteSpace('space-1');
 
-      expect(mockDel).toHaveBeenCalledWith('customspace:space:space-1');
-      expect(mockSet).toHaveBeenCalled(); // Pack updated
+      expect(mockDeleteSpace).toHaveBeenCalledWith('space-1');
     });
 
     it('should throw error when space not found', async () => {
-      mockGet.mockResolvedValue(null);
+      mockDeleteSpace.mockRejectedValue(new Error('Space not found'));
 
       await expect(deleteSpace('non-existent')).rejects.toThrow('Space not found');
     });
@@ -425,40 +432,23 @@ describe('customSpaceService', () => {
       const space1 = {
         id: 'space-1',
         name: 'Space 1',
+        description: '',
         type: CustomSpaceType.CHALLENGE,
         packId: 'pack-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       const space2 = {
         id: 'space-2',
         name: 'Space 2',
+        description: '',
         type: CustomSpaceType.DRINKING,
         packId: 'pack-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      const activePack = {
-        id: 'pack-1',
-        name: 'Active Pack',
-        description: 'Test',
-        isActive: true,
-        spaces: [space1, space2],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const inactivePack = {
-        id: 'pack-2',
-        name: 'Inactive Pack',
-        description: 'Test',
-        isActive: false,
-        spaces: [{ id: 'space-3', name: 'Space 3', type: CustomSpaceType.QUIZ, packId: 'pack-2' }],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      mockSmembers.mockResolvedValue(['pack-1', 'pack-2']);
-      mockGet
-        .mockResolvedValueOnce(JSON.stringify(activePack))
-        .mockResolvedValueOnce(JSON.stringify(inactivePack));
+      mockGetActiveSpaces.mockResolvedValue([space1, space2]);
 
       const spaces = await getActiveSpaces();
 
@@ -473,28 +463,14 @@ describe('customSpaceService', () => {
       const challengeSpace = {
         id: 'space-1',
         name: 'Challenge Space',
+        description: '',
         type: CustomSpaceType.CHALLENGE,
         packId: 'pack-1',
-      };
-      const drinkingSpace = {
-        id: 'space-2',
-        name: 'Drinking Space',
-        type: CustomSpaceType.DRINKING,
-        packId: 'pack-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      const activePack = {
-        id: 'pack-1',
-        name: 'Active Pack',
-        description: 'Test',
-        isActive: true,
-        spaces: [challengeSpace, drinkingSpace],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      mockSmembers.mockResolvedValue(['pack-1']);
-      mockGet.mockResolvedValue(JSON.stringify(activePack));
+      mockGetActiveSpacesByType.mockResolvedValue([challengeSpace]);
 
       const spaces = await getActiveSpacesByType(CustomSpaceType.CHALLENGE);
 
