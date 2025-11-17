@@ -86,7 +86,8 @@ export async function getAllStylePacks(): Promise<StylePack[]> {
   try {
     return await stylePackRepository.getAllStylePacks();
   } catch (error) {
-    console.error('Error getting style packs:', error);
+    console.warn('Database unavailable, using built-in style packs as fallback:', 
+      error instanceof Error ? error.message : 'Unknown error');
     // Return built-in packs as fallback
     return BUILT_IN_PACKS;
   }
@@ -111,7 +112,8 @@ export async function getActiveStylePack(): Promise<StylePack> {
     // Fallback to built-in default
     return DEFAULT_STYLE_PACK;
   } catch (error) {
-    console.error('Error getting active style pack:', error);
+    console.warn('Database unavailable, using built-in default style pack as fallback:', 
+      error instanceof Error ? error.message : 'Unknown error');
     return DEFAULT_STYLE_PACK;
   }
 }
