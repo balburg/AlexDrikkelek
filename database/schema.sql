@@ -1,5 +1,8 @@
 -- AlexDrikkelek Database Schema
 -- Azure SQL Database
+--
+-- Note: After creating the schema, run seed_custom_space_packs.sql to populate
+-- sample custom space packs (Doraemon and The Simpsons themes)
 
 -- Players Table
 CREATE TABLE Players (
