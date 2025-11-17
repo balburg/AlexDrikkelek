@@ -89,6 +89,7 @@ Spooky Halloween-themed challenges:
 ## Notes
 
 - Style packs (themes) are now stored in the SQL Server database
+- **Database Optional**: If the database is not configured, the backend will automatically fall back to built-in style packs (Default, Christmas, Halloween)
 - The active style pack in the database dictates the application's visual theme
 - The backend service uses the database for style pack CRUD operations
 - The backend service uses an in-memory store for game state management
