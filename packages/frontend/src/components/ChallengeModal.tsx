@@ -17,6 +17,7 @@ export default function ChallengeModal({
   onClose,
 }: ChallengeModalProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  // State for interrogation card reveal animation
   const [isRevealed, setIsRevealed] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
 
