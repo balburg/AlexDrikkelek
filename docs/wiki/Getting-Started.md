@@ -7,8 +7,8 @@ This guide will help you set up and run AlexDrikkelek locally for development or
 Before you begin, ensure you have the following installed:
 
 ### Required
-- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
-- **npm** 9.0.0 or higher (comes with Node.js)
+- **Node.js** 24.0.0 or higher ([Download](https://nodejs.org/))
+- **npm** 10.0.0 or higher (comes with Node.js)
 - **Git** for cloning the repository
 
 ### Optional
@@ -21,8 +21,8 @@ Before you begin, ensure you have the following installed:
 Check your installed versions:
 
 ```bash
-node --version   # Should show v18.0.0 or higher
-npm --version    # Should show 9.0.0 or higher
+node --version   # Should show v24.0.0 or higher
+npm --version    # Should show 10.0.0 or higher
 git --version    # Any recent version
 ```
 

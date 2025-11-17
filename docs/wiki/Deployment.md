@@ -20,7 +20,7 @@ Before deploying, ensure you have:
 
 - **Azure Account** with active subscription
 - **Azure CLI** installed and configured
-- **Node.js** 18+ and npm installed
+- **Node.js** 24+ and npm installed
 - **Docker** (for containerized deployment)
 - **Git** repository access
 - **Azure DevOps** account (for CI/CD)
@@ -169,7 +169,7 @@ az webapp create \
   --name alexdrikkelek-backend \
   --resource-group alexdrikkelek-rg \
   --plan alexdrikkelek-plan \
-  --runtime "NODE:18-lts"
+  --runtime "NODE:24-lts"
 ```
 
 **Enable WebSockets and ARR Affinity:**
@@ -427,7 +427,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '24'
       - run: npm install
       - run: npm run build:backend
       - uses: azure/webapps-deploy@v2
@@ -442,7 +442,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '24'
       - run: npm install
       - run: npm run build:frontend
       - uses: Azure/static-web-apps-deploy@v1

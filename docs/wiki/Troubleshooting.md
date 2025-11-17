@@ -137,8 +137,8 @@ Common issues and solutions for AlexDrikkelek.
 
 2. **Check Node.js Version**
    ```bash
-   node --version  # Should be 18.0.0 or higher
-   npm --version   # Should be 9.0.0 or higher
+   node --version  # Should be 24.0.0 or higher
+   npm --version   # Should be 10.0.0 or higher
    ```
 
 3. **Fix Permission Issues (Linux/Mac)**

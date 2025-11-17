@@ -1,5 +1,5 @@
 # Frontend Dockerfile
-FROM node:18-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # Production image
-FROM node:18-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
