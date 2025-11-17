@@ -214,7 +214,7 @@ export default function PlayerPage() {
 
   if (!isConnected || reconnecting) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern flex items-center justify-center p-4">
+      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern flex items-center justify-center p-4">
         <div className="bg-light-yellow rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
           <p className="text-3xl mb-4 animate-spin">🔄</p>
           <p className="text-2xl font-bold text-primary">
@@ -230,7 +230,7 @@ export default function PlayerPage() {
 
   if (!gameRoom) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern">
+      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern">
         <div className="flex min-h-screen flex-col p-4 max-w-md mx-auto justify-center">
           {/* Simplified Header */}
           <div className="text-center mb-8">
@@ -344,7 +344,7 @@ export default function PlayerPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-accent-orange via-accent-yellow to-accent-orange bg-pattern">
+    <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern">
       <div className="flex min-h-screen flex-col p-4 max-w-md mx-auto">
         {/* Compact Header */}
         <div className="bg-light-yellow rounded-2xl shadow-xl p-4 mb-4">
