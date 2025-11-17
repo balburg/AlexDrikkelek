@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CustomSpacePack, CustomSpace, CustomSpaceType } from '@/types/game';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function CustomSpacesPage() {
+  const router = useRouter();
   const [packs, setPacks] = useState<CustomSpacePack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,16 +39,37 @@ export default function CustomSpacesPage() {
   });
 
   useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
+    
     loadPacks();
-  }, []);
+  }, [router]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('adminToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Basic ${token}`,
+    };
+  };
 
   const loadPacks = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_URL}/api/admin/custom-space-packs`);
+      const response = await fetch(`${API_URL}/api/admin/custom-space-packs`, {
+        headers: getAuthHeaders(),
+      });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/admin/login');
+          return;
+        }
         throw new Error('Failed to load custom space packs');
       }
 
@@ -66,9 +89,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-space-packs`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(packForm),
       });
 
@@ -95,9 +116,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-space-packs/${editingPack.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(packForm),
       });
 
@@ -127,6 +146,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-space-packs/${packId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -148,9 +168,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-space-packs/${packId}/toggle`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isActive }),
       });
 
@@ -175,9 +193,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-space-packs/${selectedPackId}/spaces`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(spaceForm),
       });
 
@@ -213,9 +229,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-spaces/${editingSpace.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(spaceForm),
       });
 
@@ -254,6 +268,7 @@ export default function CustomSpacesPage() {
 
       const response = await fetch(`${API_URL}/api/admin/custom-spaces/${spaceId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
