@@ -699,13 +699,15 @@ async function start() {
             success: isCorrect,
           });
 
-          // Move to next turn
-          const updatedRoom = await gameService.nextTurn(data.roomId);
-          if (updatedRoom) {
-            io.to(data.roomId).emit(SocketEvent.TURN_CHANGED, {
-              currentTurn: updatedRoom.currentTurn,
-              currentPlayer: updatedRoom.players[updatedRoom.currentTurn],
-            });
+          // Move to next turn only if answer is incorrect
+          if (!isCorrect) {
+            const updatedRoom = await gameService.nextTurn(data.roomId);
+            if (updatedRoom) {
+              io.to(data.roomId).emit(SocketEvent.TURN_CHANGED, {
+                currentTurn: updatedRoom.currentTurn,
+                currentPlayer: updatedRoom.players[updatedRoom.currentTurn],
+              });
+            }
           }
 
           console.log(`Challenge ${isCorrect ? 'completed' : 'failed'} by player ${player?.name}`);
