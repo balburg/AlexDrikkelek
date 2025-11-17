@@ -13,7 +13,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  nodeVersion: '18.x'
+  nodeVersion: '24.x'
 
 stages:
   - stage: Build
@@ -97,7 +97,7 @@ stages:
                     appType: 'webAppLinux'
                     appName: 'alexdrikkelek-backend'
                     package: '$(Pipeline.Workspace)/backend'
-                    runtimeStack: 'NODE|18-lts'
+                    runtimeStack: 'NODE|24-lts'
 
       - deployment: DeployFrontend
         displayName: 'Deploy Frontend to Azure Static Web Apps'

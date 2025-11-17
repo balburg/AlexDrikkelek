@@ -1,5 +1,5 @@
 # Backend Dockerfile
-FROM node:18-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY packages/backend/ ./
 RUN npm run build
 
 # Production image
-FROM node:18-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
