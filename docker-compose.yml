@@ -14,10 +14,6 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - redis
     networks:
       - app-network
 
@@ -36,18 +32,7 @@ services:
     networks:
       - app-network
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
 
-volumes:
-  redis-data:

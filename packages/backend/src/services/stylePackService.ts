@@ -1,8 +1,8 @@
 import { StylePack, StyleTheme } from '../models/types';
-import { getRedisClient } from '../config/redis';
+import { getInMemoryStore } from '../config/inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
 
-const redis = getRedisClient();
+const store = getInMemoryStore();
 const STYLE_PACKS_KEY = 'style:packs';
 const ACTIVE_STYLE_KEY = 'style:active';
 
@@ -87,14 +87,14 @@ const BUILT_IN_PACKS = [DEFAULT_STYLE_PACK, CHRISTMAS_STYLE_PACK, HALLOWEEN_STYL
  * Initialize default style packs if they don't exist
  */
 async function initializeDefaultPacks(): Promise<void> {
-  // Directly check Redis without calling getAllStylePacks to avoid recursion
-  const packsJson = await redis.get(STYLE_PACKS_KEY);
+  // Directly check storage without calling getAllStylePacks to avoid recursion
+  const packsJson = await store.get(STYLE_PACKS_KEY);
   
   if (!packsJson) {
     // Save all built-in packs directly
     await saveAllStylePacks(BUILT_IN_PACKS);
     // Set default as active
-    await redis.set(ACTIVE_STYLE_KEY, DEFAULT_STYLE_PACK.id);
+    await store.set(ACTIVE_STYLE_KEY, DEFAULT_STYLE_PACK.id);
   }
 }
 
@@ -103,7 +103,7 @@ async function initializeDefaultPacks(): Promise<void> {
  */
 export async function getAllStylePacks(): Promise<StylePack[]> {
   try {
-    const packsJson = await redis.get(STYLE_PACKS_KEY);
+    const packsJson = await store.get(STYLE_PACKS_KEY);
     
     if (packsJson) {
       const packs = JSON.parse(packsJson) as Array<Omit<StylePack, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string }>;
@@ -128,7 +128,7 @@ export async function getAllStylePacks(): Promise<StylePack[]> {
  */
 export async function getActiveStylePack(): Promise<StylePack> {
   try {
-    const activeId = await redis.get(ACTIVE_STYLE_KEY);
+    const activeId = await store.get(ACTIVE_STYLE_KEY);
     const allPacks = await getAllStylePacks();
     
     if (activeId) {
@@ -251,7 +251,7 @@ export async function activateStylePack(id: string): Promise<StylePack> {
     }));
     
     await saveAllStylePacks(updatedPacks);
-    await redis.set(ACTIVE_STYLE_KEY, id);
+    await store.set(ACTIVE_STYLE_KEY, id);
     
     return updatedPacks.find(p => p.id === id)!;
   } catch (error) {
@@ -289,8 +289,8 @@ export async function deleteStylePack(id: string): Promise<void> {
 }
 
 /**
- * Internal: Save all style packs to Redis
+ * Internal: Save all style packs to storage
  */
 async function saveAllStylePacks(packs: StylePack[]): Promise<void> {
-  await redis.set(STYLE_PACKS_KEY, JSON.stringify(packs));
+  await store.set(STYLE_PACKS_KEY, JSON.stringify(packs));
 }

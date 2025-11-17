@@ -1,10 +1,10 @@
 import { CustomSpace, CustomSpacePack, CustomSpaceType } from '../models/types';
-import { getRedisClient } from '../config/redis';
+import { getInMemoryStore } from '../config/inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
 
-const redis = getRedisClient();
+const store = getInMemoryStore();
 
-// Redis keys
+// Storage keys
 const PACK_KEY_PREFIX = 'customspace:pack:';
 const PACKS_LIST_KEY = 'customspace:packs';
 const SPACE_KEY_PREFIX = 'customspace:space:';
@@ -14,11 +14,11 @@ const SPACE_KEY_PREFIX = 'customspace:space:';
  */
 export async function getAllPacks(): Promise<CustomSpacePack[]> {
   try {
-    const packIds = await redis.smembers(PACKS_LIST_KEY);
+    const packIds = await store.smembers(PACKS_LIST_KEY);
     const packs: CustomSpacePack[] = [];
 
     for (const packId of packIds) {
-      const packData = await redis.get(`${PACK_KEY_PREFIX}${packId}`);
+      const packData = await store.get(`${PACK_KEY_PREFIX}${packId}`);
       if (packData) {
         const pack = JSON.parse(packData);
         // Convert date strings back to Date objects
@@ -48,7 +48,7 @@ export async function getActivePacks(): Promise<CustomSpacePack[]> {
  */
 export async function getPackById(packId: string): Promise<CustomSpacePack | null> {
   try {
-    const packData = await redis.get(`${PACK_KEY_PREFIX}${packId}`);
+    const packData = await store.get(`${PACK_KEY_PREFIX}${packId}`);
     if (!packData) {
       return null;
     }
@@ -84,8 +84,8 @@ export async function createPack(
     updatedAt: now,
   };
 
-  await redis.sadd(PACKS_LIST_KEY, packId);
-  await redis.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(pack));
+  await store.sadd(PACKS_LIST_KEY, packId);
+  await store.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(pack));
 
   return pack;
 }
@@ -111,7 +111,7 @@ export async function updatePack(
     updatedAt: new Date(),
   };
 
-  await redis.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(updatedPack));
+  await store.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(updatedPack));
 
   return updatedPack;
 }
@@ -134,12 +134,12 @@ export async function deletePack(packId: string): Promise<void> {
 
   // Delete all spaces in the pack
   for (const space of pack.spaces) {
-    await redis.del(`${SPACE_KEY_PREFIX}${space.id}`);
+    await store.del(`${SPACE_KEY_PREFIX}${space.id}`);
   }
 
   // Delete the pack itself
-  await redis.del(`${PACK_KEY_PREFIX}${packId}`);
-  await redis.srem(PACKS_LIST_KEY, packId);
+  await store.del(`${PACK_KEY_PREFIX}${packId}`);
+  await store.srem(PACKS_LIST_KEY, packId);
 }
 
 /**
@@ -186,8 +186,8 @@ export async function createSpace(
   pack.updatedAt = now;
 
   // Save space and updated pack
-  await redis.set(`${SPACE_KEY_PREFIX}${spaceId}`, JSON.stringify(space));
-  await redis.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(pack));
+  await store.set(`${SPACE_KEY_PREFIX}${spaceId}`, JSON.stringify(space));
+  await store.set(`${PACK_KEY_PREFIX}${packId}`, JSON.stringify(pack));
 
   return space;
 }
@@ -199,7 +199,7 @@ export async function updateSpace(
   spaceId: string,
   updates: Partial<Omit<CustomSpace, 'id' | 'packId' | 'createdAt' | 'updatedAt'>>
 ): Promise<CustomSpace> {
-  const spaceData = await redis.get(`${SPACE_KEY_PREFIX}${spaceId}`);
+  const spaceData = await store.get(`${SPACE_KEY_PREFIX}${spaceId}`);
   if (!spaceData) {
     throw new Error('Space not found');
   }
@@ -224,10 +224,10 @@ export async function updateSpace(
   if (spaceIndex !== -1) {
     pack.spaces[spaceIndex] = updatedSpace;
     pack.updatedAt = new Date();
-    await redis.set(`${PACK_KEY_PREFIX}${space.packId}`, JSON.stringify(pack));
+    await store.set(`${PACK_KEY_PREFIX}${space.packId}`, JSON.stringify(pack));
   }
 
-  await redis.set(`${SPACE_KEY_PREFIX}${spaceId}`, JSON.stringify(updatedSpace));
+  await store.set(`${SPACE_KEY_PREFIX}${spaceId}`, JSON.stringify(updatedSpace));
 
   return updatedSpace;
 }
@@ -236,7 +236,7 @@ export async function updateSpace(
  * Delete a custom space
  */
 export async function deleteSpace(spaceId: string): Promise<void> {
-  const spaceData = await redis.get(`${SPACE_KEY_PREFIX}${spaceId}`);
+  const spaceData = await store.get(`${SPACE_KEY_PREFIX}${spaceId}`);
   if (!spaceData) {
     throw new Error('Space not found');
   }
@@ -250,10 +250,10 @@ export async function deleteSpace(spaceId: string): Promise<void> {
   // Remove space from pack
   pack.spaces = pack.spaces.filter(s => s.id !== spaceId);
   pack.updatedAt = new Date();
-  await redis.set(`${PACK_KEY_PREFIX}${space.packId}`, JSON.stringify(pack));
+  await store.set(`${PACK_KEY_PREFIX}${space.packId}`, JSON.stringify(pack));
 
   // Delete space
-  await redis.del(`${SPACE_KEY_PREFIX}${spaceId}`);
+  await store.del(`${SPACE_KEY_PREFIX}${spaceId}`);
 }
 
 /**

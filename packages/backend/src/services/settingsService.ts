@@ -1,7 +1,7 @@
 import { GameSettings, ChallengeDifficulty } from '../models/types';
-import { getRedisClient } from '../config/redis';
+import { getInMemoryStore } from '../config/inMemoryStore';
 
-const redis = getRedisClient();
+const store = getInMemoryStore();
 const SETTINGS_KEY = 'game:settings';
 
 /**
@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS: GameSettings = {
  */
 export async function getSettings(): Promise<GameSettings> {
   try {
-    const settingsJson = await redis.get(SETTINGS_KEY);
+    const settingsJson = await store.get(SETTINGS_KEY);
     
     if (settingsJson) {
       const settings = JSON.parse(settingsJson);
@@ -131,8 +131,8 @@ export async function resetSettings(): Promise<GameSettings> {
 }
 
 /**
- * Internal: Save settings to Redis
+ * Internal: Save settings to storage
  */
 async function saveSettings(settings: GameSettings): Promise<void> {
-  await redis.set(SETTINGS_KEY, JSON.stringify(settings));
+  await store.set(SETTINGS_KEY, JSON.stringify(settings));
 }

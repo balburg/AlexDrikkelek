@@ -37,9 +37,24 @@ async function start() {
     credentials: true,
   });
 
-  // Health check endpoint
+  // Health check endpoint with monitoring
   fastify.get('/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    const rooms = await gameService.getAllRooms();
+    const activeRooms = rooms.filter(room => room.status === 'playing' || room.status === 'waiting');
+    const totalPlayers = rooms.reduce((sum, room) => sum + room.players.length, 0);
+    const connectedPlayers = rooms.reduce((sum, room) => 
+      sum + room.players.filter(p => p.isConnected).length, 0);
+    
+    return { 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      stats: {
+        totalRooms: rooms.length,
+        activeRooms: activeRooms.length,
+        totalPlayers,
+        connectedPlayers,
+      }
+    };
   });
 
   // API routes

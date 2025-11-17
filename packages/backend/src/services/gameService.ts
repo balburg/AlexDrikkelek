@@ -1,9 +1,9 @@
 import { GameRoom, Player, BoardState, Tile, TileType, RoomStatus, CustomSpaceType } from '../models/types';
-import { getRedisClient } from '../config/redis';
+import { getInMemoryStore } from '../config/inMemoryStore';
 import * as customSpaceService from './customSpaceService';
 import { v4 as uuidv4 } from 'uuid';
 
-const redis = getRedisClient();
+const store = getInMemoryStore();
 
 /**
  * Generate a unique room code
@@ -178,11 +178,11 @@ export async function createRoom(hostId: string, hostName: string, hostAvatar?: 
     updatedAt: new Date(),
   };
   
-  // Store in Redis
-  await redis.setex(`room:${roomId}`, 3600 * 4, JSON.stringify(room)); // 4 hour expiry
-  await redis.setex(`room:code:${code}`, 3600 * 4, roomId);
+  // Store in memory
+  await store.setex(`room:${roomId}`, 3600 * 4, JSON.stringify(room)); // 4 hour expiry
+  await store.setex(`room:code:${code}`, 3600 * 4, roomId);
   // Store player session mapping
-  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: hostId }));
+  await store.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: hostId }));
   
   return room;
 }
@@ -191,7 +191,7 @@ export async function createRoom(hostId: string, hostName: string, hostAvatar?: 
  * Get a room by ID
  */
 export async function getRoom(roomId: string): Promise<GameRoom | null> {
-  const data = await redis.get(`room:${roomId}`);
+  const data = await store.get(`room:${roomId}`);
   if (!data) return null;
   
   const room = JSON.parse(data);
@@ -210,7 +210,7 @@ export async function getRoom(roomId: string): Promise<GameRoom | null> {
  * Get a room by code
  */
 export async function getRoomByCode(code: string): Promise<GameRoom | null> {
-  const roomId = await redis.get(`room:code:${code}`);
+  const roomId = await store.get(`room:code:${code}`);
   if (!roomId) return null;
   return getRoom(roomId);
 }
@@ -220,7 +220,7 @@ export async function getRoomByCode(code: string): Promise<GameRoom | null> {
  */
 export async function updateRoom(room: GameRoom): Promise<void> {
   room.updatedAt = new Date();
-  await redis.setex(`room:${room.id}`, 3600 * 4, JSON.stringify(room));
+  await store.setex(`room:${room.id}`, 3600 * 4, JSON.stringify(room));
 }
 
 /**
@@ -264,7 +264,7 @@ export async function addPlayerToRoom(roomId: string, playerId: string, playerNa
   await updateRoom(room);
   
   // Store player session mapping
-  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId }));
+  await store.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId }));
   
   return room;
 }
@@ -355,7 +355,7 @@ export async function reconnectPlayer(
   newSocketId: string
 ): Promise<{ room: GameRoom; player: Player } | null> {
   // Get session data
-  const sessionData = await redis.get(`session:${playerSessionId}`);
+  const sessionData = await store.get(`session:${playerSessionId}`);
   if (!sessionData) return null;
   
   const { roomId } = JSON.parse(sessionData);
@@ -374,7 +374,7 @@ export async function reconnectPlayer(
   await updateRoom(room);
   
   // Update session mapping
-  await redis.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: newSocketId }));
+  await store.setex(`session:${playerSessionId}`, 3600 * 4, JSON.stringify({ roomId, playerId: newSocketId }));
   
   return { room, player };
 }
@@ -438,11 +438,14 @@ export async function promoteNewHost(room: GameRoom): Promise<void> {
  * Get all rooms (for statistics and admin purposes)
  */
 export async function getAllRooms(): Promise<GameRoom[]> {
-  const keys = await redis.keys('room:*');
+  const keys = await store.keys('room:*');
   const rooms: GameRoom[] = [];
   
   for (const key of keys) {
-    const roomData = await redis.get(key);
+    // Skip code mapping keys
+    if (key.startsWith('room:code:')) continue;
+    
+    const roomData = await store.get(key);
     if (roomData) {
       try {
         const room = JSON.parse(roomData) as GameRoom;
