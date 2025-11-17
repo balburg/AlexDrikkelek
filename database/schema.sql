@@ -114,6 +114,34 @@ CREATE INDEX IX_CustomSpaces_PackId ON CustomSpaces(PackId);
 CREATE INDEX IX_CustomSpaces_Type ON CustomSpaces(Type);
 CREATE INDEX IX_CustomSpacePacks_IsActive ON CustomSpacePacks(IsActive);
 
+-- Style Packs Table
+CREATE TABLE StylePacks (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    Name NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500),
+    IsActive BIT DEFAULT 0,
+    IsDefault BIT DEFAULT 0,
+    ThemePrimary NVARCHAR(20) NOT NULL,
+    ThemePrimaryLight NVARCHAR(20) NOT NULL,
+    ThemePrimaryDark NVARCHAR(20) NOT NULL,
+    ThemeSecondary NVARCHAR(20) NOT NULL,
+    ThemeSecondaryLight NVARCHAR(20) NOT NULL,
+    ThemeSecondaryDark NVARCHAR(20) NOT NULL,
+    ThemeAccentBlue NVARCHAR(20) NOT NULL,
+    ThemeAccentOrange NVARCHAR(20) NOT NULL,
+    ThemeAccentGreen NVARCHAR(20) NOT NULL,
+    ThemeAccentYellow NVARCHAR(20) NOT NULL,
+    ThemeBackground NVARCHAR(500),
+    ThemePattern NVARCHAR(100),
+    PreviewImage NVARCHAR(500),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+
+-- Indexes for performance
+CREATE INDEX IX_StylePacks_IsActive ON StylePacks(IsActive);
+CREATE INDEX IX_StylePacks_IsDefault ON StylePacks(IsDefault);
+
 -- Sample Challenges Data
 INSERT INTO Challenges (ChallengeType, Category, AgeRating, Question, Answers, CorrectAnswer, Points)
 VALUES 

@@ -1,10 +1,6 @@
 import { StylePack, StyleTheme } from '../models/types';
-import { getInMemoryStore } from '../config/inMemoryStore';
 import { v4 as uuidv4 } from 'uuid';
-
-const store = getInMemoryStore();
-const STYLE_PACKS_KEY = 'style:packs';
-const ACTIVE_STYLE_KEY = 'style:active';
+import * as stylePackRepository from '../repositories/stylePackRepository';
 
 /**
  * Default style packs (built-in themes)
@@ -84,41 +80,14 @@ const HALLOWEEN_STYLE_PACK: StylePack = {
 const BUILT_IN_PACKS = [DEFAULT_STYLE_PACK, CHRISTMAS_STYLE_PACK, HALLOWEEN_STYLE_PACK];
 
 /**
- * Initialize default style packs if they don't exist
- */
-async function initializeDefaultPacks(): Promise<void> {
-  // Directly check storage without calling getAllStylePacks to avoid recursion
-  const packsJson = await store.get(STYLE_PACKS_KEY);
-  
-  if (!packsJson) {
-    // Save all built-in packs directly
-    await saveAllStylePacks(BUILT_IN_PACKS);
-    // Set default as active
-    await store.set(ACTIVE_STYLE_KEY, DEFAULT_STYLE_PACK.id);
-  }
-}
-
-/**
  * Get all style packs
  */
 export async function getAllStylePacks(): Promise<StylePack[]> {
   try {
-    const packsJson = await store.get(STYLE_PACKS_KEY);
-    
-    if (packsJson) {
-      const packs = JSON.parse(packsJson) as Array<Omit<StylePack, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string }>;
-      return packs.map((pack) => ({
-        ...pack,
-        createdAt: new Date(pack.createdAt),
-        updatedAt: new Date(pack.updatedAt),
-      }));
-    }
-    
-    // Initialize with defaults if no packs exist
-    await initializeDefaultPacks();
-    return BUILT_IN_PACKS;
+    return await stylePackRepository.getAllStylePacks();
   } catch (error) {
     console.error('Error getting style packs:', error);
+    // Return built-in packs as fallback
     return BUILT_IN_PACKS;
   }
 }
@@ -128,18 +97,19 @@ export async function getAllStylePacks(): Promise<StylePack[]> {
  */
 export async function getActiveStylePack(): Promise<StylePack> {
   try {
-    const activeId = await store.get(ACTIVE_STYLE_KEY);
-    const allPacks = await getAllStylePacks();
-    
-    if (activeId) {
-      const activePack = allPacks.find(pack => pack.id === activeId);
-      if (activePack) {
-        return activePack;
-      }
+    const activePack = await stylePackRepository.getActiveStylePack();
+    if (activePack) {
+      return activePack;
     }
     
-    // Return default if no active pack found
-    return allPacks.find(pack => pack.isDefault) || DEFAULT_STYLE_PACK;
+    // If no active pack, try to get default
+    const defaultPack = await stylePackRepository.getDefaultStylePack();
+    if (defaultPack) {
+      return defaultPack;
+    }
+    
+    // Fallback to built-in default
+    return DEFAULT_STYLE_PACK;
   } catch (error) {
     console.error('Error getting active style pack:', error);
     return DEFAULT_STYLE_PACK;
@@ -151,8 +121,7 @@ export async function getActiveStylePack(): Promise<StylePack> {
  */
 export async function getStylePackById(id: string): Promise<StylePack | null> {
   try {
-    const allPacks = await getAllStylePacks();
-    return allPacks.find(pack => pack.id === id) || null;
+    return await stylePackRepository.getStylePackById(id);
   } catch (error) {
     console.error('Error getting style pack by ID:', error);
     return null;
@@ -169,23 +138,8 @@ export async function createStylePack(
   previewImage?: string
 ): Promise<StylePack> {
   try {
-    const newPack: StylePack = {
-      id: uuidv4(),
-      name,
-      description,
-      isActive: false,
-      isDefault: false,
-      theme,
-      previewImage,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    const allPacks = await getAllStylePacks();
-    allPacks.push(newPack);
-    await saveAllStylePacks(allPacks);
-    
-    return newPack;
+    const id = uuidv4();
+    return await stylePackRepository.createStylePack(id, name, description, theme, previewImage);
   } catch (error) {
     console.error('Error creating style pack:', error);
     throw error;
@@ -200,31 +154,28 @@ export async function updateStylePack(
   updates: Partial<Omit<StylePack, 'id' | 'createdAt' | 'isDefault'>>
 ): Promise<StylePack> {
   try {
-    const allPacks = await getAllStylePacks();
-    const packIndex = allPacks.findIndex(pack => pack.id === id);
+    const pack = await stylePackRepository.getStylePackById(id);
     
-    if (packIndex === -1) {
+    if (!pack) {
       throw new Error('Style pack not found');
     }
     
-    const pack = allPacks[packIndex];
-    
     // Don't allow changing isDefault for built-in packs
-    if (pack.isDefault && updates.isActive !== undefined) {
-      // Allow only activation changes for default pack
-      updates = { isActive: updates.isActive };
+    if (pack.isDefault && updates.isActive === undefined) {
+      throw new Error('Cannot modify default style pack');
     }
     
-    const updatedPack: StylePack = {
-      ...pack,
-      ...updates,
-      updatedAt: new Date(),
-    };
+    // If isActive is being set, use activateStylePack instead
+    if (updates.isActive) {
+      return await activateStylePack(id);
+    }
     
-    allPacks[packIndex] = updatedPack;
-    await saveAllStylePacks(allPacks);
-    
-    return updatedPack;
+    return await stylePackRepository.updateStylePack(id, {
+      name: updates.name,
+      description: updates.description,
+      theme: updates.theme,
+      previewImage: updates.previewImage,
+    });
   } catch (error) {
     console.error('Error updating style pack:', error);
     throw error;
@@ -236,24 +187,7 @@ export async function updateStylePack(
  */
 export async function activateStylePack(id: string): Promise<StylePack> {
   try {
-    const allPacks = await getAllStylePacks();
-    const pack = allPacks.find(p => p.id === id);
-    
-    if (!pack) {
-      throw new Error('Style pack not found');
-    }
-    
-    // Deactivate all packs and activate the selected one
-    const updatedPacks = allPacks.map(p => ({
-      ...p,
-      isActive: p.id === id,
-      updatedAt: p.id === id ? new Date() : p.updatedAt,
-    }));
-    
-    await saveAllStylePacks(updatedPacks);
-    await store.set(ACTIVE_STYLE_KEY, id);
-    
-    return updatedPacks.find(p => p.id === id)!;
+    return await stylePackRepository.activateStylePack(id);
   } catch (error) {
     console.error('Error activating style pack:', error);
     throw error;
@@ -265,8 +199,7 @@ export async function activateStylePack(id: string): Promise<StylePack> {
  */
 export async function deleteStylePack(id: string): Promise<void> {
   try {
-    const allPacks = await getAllStylePacks();
-    const pack = allPacks.find(p => p.id === id);
+    const pack = await stylePackRepository.getStylePackById(id);
     
     if (!pack) {
       throw new Error('Style pack not found');
@@ -280,17 +213,9 @@ export async function deleteStylePack(id: string): Promise<void> {
       throw new Error('Cannot delete active style pack. Please activate another pack first.');
     }
     
-    const filteredPacks = allPacks.filter(p => p.id !== id);
-    await saveAllStylePacks(filteredPacks);
+    await stylePackRepository.deleteStylePack(id);
   } catch (error) {
     console.error('Error deleting style pack:', error);
     throw error;
   }
-}
-
-/**
- * Internal: Save all style packs to storage
- */
-async function saveAllStylePacks(packs: StylePack[]): Promise<void> {
-  await store.set(STYLE_PACKS_KEY, JSON.stringify(packs));
 }
