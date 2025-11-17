@@ -3,6 +3,7 @@
 import { Challenge, ChallengeType } from '@/types/game';
 import { useState } from 'react';
 
+
 interface ChallengeModalProps {
   challenge: Challenge;
   playerName: string;
