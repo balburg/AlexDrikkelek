@@ -110,7 +110,7 @@ Common issues and solutions for AlexDrikkelek.
    # Clear "Cached images and files"
    ```
 
-4. **Check Backend Database/Redis**
+4. **Check Backend Storage**
    ```bash
    # Verify room exists in storage
    # Check backend logs for errors
@@ -508,39 +508,6 @@ taskkill /PID <PID> /F
 
 ---
 
-### Redis Connection Errors
-
-**Symptoms:**
-- "ENOTFOUND your-redis.redis.cache.windows.net"
-- Redis connection errors in logs
-
-**Solutions:**
-
-1. **For Local Development (Optional)**
-   - Redis is optional for basic features
-   - Set dummy values or leave empty
-
-2. **Start Local Redis (Docker)**
-   ```bash
-   docker run -d -p 6379:6379 redis:latest
-   ```
-
-3. **Check Redis Configuration**
-   ```bash
-   # In packages/backend/.env
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   REDIS_PASSWORD=  # Empty for local
-   ```
-
-4. **Verify Azure Redis (Production)**
-   ```bash
-   # Check Azure portal for correct hostname
-   # Verify access keys
-   ```
-
----
-
 ## Deployment Issues
 
 ### Azure Deployment Fails
@@ -628,4 +595,4 @@ If you can't resolve your issue:
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 17-11-2025

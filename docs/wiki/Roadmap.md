@@ -58,7 +58,7 @@ To create the most fun, accessible, and engaging online multiplayer board game p
   - [ ] Transfer host if needed
   - [ ] Clean up empty rooms
 - [ ] Room state management
-  - [ ] Redis caching
+  - [ ] In-memory caching
   - [ ] Database persistence
   - [ ] Real-time synchronization
 
@@ -190,10 +190,6 @@ To create the most fun, accessible, and engaging online multiplayer board game p
   - [ ] Image upload API
   - [ ] Image processing
   - [ ] Storage management
-- [ ] Redis caching implementation
-  - [ ] Session storage
-  - [ ] Room state caching
-  - [ ] Leaderboard data
 
 ---
 
@@ -218,7 +214,7 @@ To create the most fun, accessible, and engaging online multiplayer board game p
   - [ ] Refresh logic
 - [ ] Rate limiting implementation
   - [ ] Per-endpoint limits
-  - [ ] Redis-based tracking
+  - [ ] In-memory tracking
 - [ ] Input validation
   - [ ] Schema validation
   - [ ] Sanitization
@@ -518,4 +514,4 @@ Have suggestions or want to help implement features?
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 17-11-2025
