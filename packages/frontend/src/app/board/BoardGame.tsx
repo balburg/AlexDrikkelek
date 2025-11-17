@@ -136,7 +136,7 @@ export default function BoardGame() {
 
   if (!isConnected) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-primary-dark bg-pattern flex items-center justify-center p-4">
+      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
           <p className="text-6xl mb-4">🔄</p>
           <p className="text-3xl font-bold text-primary">Connecting...</p>
@@ -147,7 +147,7 @@ export default function BoardGame() {
 
   if (!gameRoom) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-primary-dark bg-pattern">
+      <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern">
         <div className="flex min-h-screen flex-col items-center justify-center p-6">
           {/* Header */}
           <div className="text-center mb-8 animate-float">
@@ -200,7 +200,7 @@ export default function BoardGame() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-primary-dark bg-pattern">
+    <main className="min-h-screen bg-gradient-to-br from-primary via-accent-blue to-secondary bg-pattern">
       <div className="flex min-h-screen flex-col p-6">
         {/* Header with Room Code */}
         <div className="text-center mb-6">
