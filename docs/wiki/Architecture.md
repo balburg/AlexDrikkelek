@@ -20,7 +20,7 @@ graph TB
     
     subgraph "Data Layer"
         E[Azure SQL<br/>Database]
-        F[Azure Redis<br/>Cache]
+        F[In-Memory<br/>Storage]
         G[Azure Blob<br/>Storage]
     end
     
@@ -69,14 +69,13 @@ graph TB
 | Socket.IO | 4.x | WebSocket server |
 | TypeScript | 5.x | Type-safe development |
 | mssql | Latest | Azure SQL Database client |
-| ioredis | Latest | Redis client for caching |
 
 **Backend Features:**
 - RESTful API endpoints
 - WebSocket server for real-time events
 - Server-authoritative game logic (anti-cheat)
 - Database connection pooling
-- Redis pub/sub for horizontal scaling
+- In-memory state management (single instance deployment)
 - Structured logging
 
 ### Azure Services
@@ -84,14 +83,15 @@ graph TB
 | Service | Purpose | Environment |
 |---------|---------|-------------|
 | Azure Static Web Apps | Frontend hosting | Production |
-| Azure App Service | Backend hosting | Production |
+| Azure App Service | Backend hosting (single instance with ARR affinity) | Production |
 | Azure SQL Database | Data persistence | Production |
-| Azure Cache for Redis | Session storage, caching | Production |
 | Azure Blob Storage | Media assets (avatars, icons) | Production |
 | Anonymous Access | No authentication (players use name + avatar) | Production |
 | Azure Monitor | Performance monitoring | Production |
 | Application Insights | Request tracking, logging | Production |
 | Azure DevOps Pipelines | CI/CD automation | All |
+
+**Note:** The backend runs as a single instance with in-memory state management. ARR affinity (sticky sessions) must be enabled on Azure App Service to ensure all WebSocket connections for a room stay on the same instance.
 
 ## Component Architecture
 
@@ -136,7 +136,7 @@ packages/backend/
 │   │
 │   ├── config/               # Configuration
 │   │   ├── database.ts       # Database connection
-│   │   ├── redis.ts          # Redis connection
+│   │   ├── inMemoryStore.ts  # In-memory storage
 │   │   └── env.ts           # Environment variables
 │   │
 │   ├── models/               # Data models
@@ -169,14 +169,13 @@ sequenceDiagram
     participant F as Frontend
     participant B as Backend
     participant DB as Database
-    participant R as Redis
     
     P->>F: Create Game (name)
     F->>B: Socket: CREATE_ROOM
     B->>B: Generate Room Code
     B->>B: Generate Board
     B->>DB: Store Room
-    B->>R: Cache Room State
+    B->>B: Cache Room State (In-Memory)
     B->>F: ROOM_UPDATED
     F->>P: Display PIN
 ```
@@ -193,6 +192,7 @@ sequenceDiagram
     P1->>B: ROLL_DICE
     B->>B: Validate Turn
     B->>B: Generate Random (1-6)
+    B->>B: Update In-Memory State
     B-->>P1: DICE_ROLLED
     B-->>P2: DICE_ROLLED
     B-->>TV: DICE_ROLLED
@@ -278,25 +278,25 @@ CREATE TABLE Challenges (
 
 For the complete schema, see [`/database/schema.sql`](https://github.com/balburg/AlexDrikkelek/blob/main/database/schema.sql).
 
-## Redis Cache Structure
+## In-Memory Storage
 
-### Cache Keys
+The backend uses an in-memory storage system for session and state management in a single-instance deployment model.
 
-```
-room:{roomId}                    # Game room state
-room:code:{code}                 # Room ID by code lookup
-room:{roomId}:players            # Players in room (SET)
-session:{sessionId}              # Player session data
-ratelimit:{ip}:{endpoint}        # Rate limiting
-leaderboard:daily                # Daily leaderboard (ZSET)
-```
+### Storage Structure
 
-### Pub/Sub Channels
+**Stored Data:**
+- Game room state
+- Player sessions
+- Room code lookups
+- Active players per room
 
-```
-room:{roomId}:events             # Room-specific events
-global:announcements             # Global announcements
-```
+**Features:**
+- Automatic expiration of old data
+- Key-based storage with TTL support
+- Set operations for player lists
+- Pattern-based key retrieval
+
+**Important:** The backend must run as a single instance with ARR affinity (sticky sessions) enabled to ensure all connections for a room stay on the same server instance.
 
 ## API Endpoints
 
@@ -351,7 +351,7 @@ The game operates with anonymous access for simplicity and ease of use.
 graph LR
     A[Player] -->|1. Enter Name + Avatar| B[Frontend]
     B -->|2. Create/Join Room| C[Backend]
-    C -->|3. Generate Session ID| D[Redis]
+    C -->|3. Generate Session ID| D[In-Memory Store]
     D -->|4. Session Stored| C
     C -->|5. Room Info| B
     B -->|6. Store Session in localStorage| A
@@ -379,7 +379,7 @@ graph LR
 
 3. **Rate Limiting**
    - API endpoints protected from abuse
-   - Redis-based rate limiting
+   - In-memory rate limiting
    - Per-IP and per-user limits
 
 4. **HTTPS/WSS**
@@ -400,43 +400,42 @@ graph LR
 
 ## Scalability Design
 
-### Horizontal Scaling
+### Single-Instance Deployment
+
+The current architecture is designed for single-instance deployment with sticky sessions.
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Backend 1  │     │  Backend 2  │     │  Backend 3  │
-│  + Socket.IO│     │  + Socket.IO│     │  + Socket.IO│
-└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
-       │                   │                   │
-       └───────────────────┼───────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │    Redis    │
-                    │   Pub/Sub   │
-                    └─────────────┘
+┌─────────────────┐
+│   Azure App     │
+│    Service      │
+│  (Backend 1)    │
+│  + Socket.IO    │
+│  + In-Memory    │
+│     Storage     │
+└────────┬────────┘
+         │
+         ├──→ Azure SQL Database
+         ├──→ Azure Blob Storage
+         └──→ Application Insights
 ```
 
-**Scaling Strategies:**
+**Deployment Requirements:**
 
-1. **Stateless Backend**
-   - Session state in Redis, not memory
-   - Any backend instance can handle any request
+1. **Sticky Sessions (ARR Affinity)**
+   - ARR affinity must be enabled on Azure App Service
+   - Ensures all WebSocket connections for a room stay on the same instance
+   - Required for in-memory state management
 
-2. **Redis Adapter for Socket.IO**
-   - Synchronizes WebSocket events across instances
-   - Pub/sub for cross-instance communication
-
-3. **Database Connection Pooling**
+2. **Database Connection Pooling**
    - Reuse database connections
    - Prevents connection exhaustion
 
-4. **CDN for Static Assets**
+3. **CDN for Static Assets**
    - Azure CDN for frontend assets
    - Reduced backend load
 
-5. **Load Balancing**
-   - Azure Load Balancer or Application Gateway
-   - Sticky sessions for WebSocket connections
+**Note on Horizontal Scaling:**
+The current implementation uses in-memory storage and is designed for single-instance deployment. For horizontal scaling (multiple backend instances), consider migrating to a distributed cache solution like Redis.
 
 ## Monitoring & Observability
 
@@ -444,7 +443,7 @@ graph LR
 
 **Tracked Metrics:**
 - Request duration and throughput
-- Dependency calls (DB, Redis, External APIs)
+- Dependency calls (DB, External APIs)
 - Exception tracking and stack traces
 - Custom events (game created, game started, challenge completed)
 - User sessions and active players
@@ -482,17 +481,16 @@ Internet
    │             │
    │             └─→ Socket.IO Client
    │
-   └─→ Azure Load Balancer
-          └─→ App Service Instances
-                 └─→ Fastify Backend + Socket.IO
-                        │
-                        ├─→ Azure SQL Database
-                        ├─→ Azure Redis Cache
-                        ├─→ Azure Blob Storage
-                        └─→ Application Insights
+   └─→ Azure App Service (ARR Affinity Enabled)
+          └─→ Fastify Backend + Socket.IO
+                 │
+                 ├─→ Azure SQL Database
+                 ├─→ In-Memory Storage
+                 ├─→ Azure Blob Storage
+                 └─→ Application Insights
 ```
 
-**Note:** Authentication is intentionally disabled. The system operates anonymously.
+**Note:** Authentication is intentionally disabled. The system operates anonymously. The backend runs as a single instance with ARR affinity (sticky sessions) enabled.
 
 ### CI/CD Pipeline
 
@@ -510,7 +508,7 @@ See [Deployment Guide](./Deployment.md) for detailed deployment instructions.
 
 ## Future Enhancements
 
-- [ ] Horizontal scaling with multiple backend instances
+- [ ] Horizontal scaling with distributed cache (Redis) for multiple backend instances
 - [ ] Machine learning for challenge difficulty adjustment
 - [ ] Video chat integration (WebRTC)
 - [ ] Tournament mode with brackets
@@ -529,4 +527,4 @@ See [Deployment Guide](./Deployment.md) for detailed deployment instructions.
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 17-11-2025

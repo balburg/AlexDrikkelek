@@ -978,9 +978,9 @@ The API operates with anonymous access - no authentication required.
 
 **How it works:**
 1. Players provide a name and avatar when joining
-2. Backend generates a session ID stored in Redis
+2. Backend generates a session ID stored in in-memory storage
 3. Session ID is saved in browser localStorage for reconnection
-4. Sessions expire after 4 hours of inactivity
+4. Sessions expire after a period of inactivity
 
 **Benefits:**
 - Lower barrier to entry
@@ -1042,4 +1042,4 @@ socket.on('dice_rolled', (data) => {
 
 ---
 
-**Last updated:** 13-11-2025
+**Last updated:** 17-11-2025

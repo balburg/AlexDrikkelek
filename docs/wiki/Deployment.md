@@ -118,33 +118,7 @@ Connection Timeout=30;
 
 ---
 
-### 3. Azure Cache for Redis
-
-```bash
-az redis create \
-  --name alexdrikkelek-redis \
-  --resource-group alexdrikkelek-rg \
-  --location westeurope \
-  --sku Basic \
-  --vm-size c0 \
-  --enable-non-ssl-port false
-```
-
-**Get Access Keys:**
-```bash
-az redis list-keys \
-  --name alexdrikkelek-redis \
-  --resource-group alexdrikkelek-rg
-```
-
-**Connection Details:**
-- Host: `alexdrikkelek-redis.redis.cache.windows.net`
-- Port: `6380` (SSL)
-- Password: From `az redis list-keys`
-
----
-
-### 4. Azure Blob Storage
+### 3. Azure Blob Storage
 
 **Create Storage Account:**
 ```bash
@@ -178,7 +152,7 @@ az storage container create \
 
 ---
 
-### 5. Azure App Service (Backend)
+### 4. Azure App Service (Backend)
 
 **Create App Service Plan:**
 ```bash
@@ -198,17 +172,25 @@ az webapp create \
   --runtime "NODE:18-lts"
 ```
 
-**Enable WebSockets:**
+**Enable WebSockets and ARR Affinity:**
 ```bash
 az webapp config set \
   --name alexdrikkelek-backend \
   --resource-group alexdrikkelek-rg \
   --web-sockets-enabled true
+
+# Enable ARR affinity (sticky sessions) - REQUIRED for in-memory storage
+az webapp config set \
+  --name alexdrikkelek-backend \
+  --resource-group alexdrikkelek-rg \
+  --generic-configurations '{"ARRAffinity":"true"}'
 ```
+
+**Important:** ARR affinity (sticky sessions) must be enabled to ensure all WebSocket connections for a room stay on the same backend instance when using in-memory storage.
 
 ---
 
-### 6. Azure Static Web Apps (Frontend)
+### 5. Azure Static Web Apps (Frontend)
 
 **Create Static Web App:**
 ```bash
@@ -232,14 +214,14 @@ az staticwebapp secrets list \
 
 ---
 
-### 7. Anonymous Access
+### 6. Anonymous Access
 
 **The game operates with anonymous access - no authentication required.**
 
 Players join with just a name and avatar. This simplifies the user experience and reduces infrastructure complexity.
 
 **Session Management:**
-- Sessions are stored in Redis with 4-hour expiry
+- Sessions are stored in in-memory storage with automatic expiry
 - Session IDs are saved in browser localStorage
 - Reconnection is automatic using the stored session ID
 
@@ -250,7 +232,7 @@ Players join with just a name and avatar. This simplifies the user experience an
 
 ---
 
-### 8. Application Insights
+### 7. Application Insights
 
 ```bash
 az monitor app-insights component create \
@@ -423,8 +405,9 @@ The project includes `azure-pipelines.yml` for automated deployments.
    ```
    AZURE_STATIC_WEB_APPS_API_TOKEN: <from Static Web Apps>
    DB_PASSWORD: <database password>
-   REDIS_PASSWORD: <redis access key>
    ```
+
+**Note:** Redis variables are not needed as the backend uses in-memory storage.
 
 ### GitHub Actions (Alternative)
 
@@ -493,13 +476,11 @@ az webapp config appsettings set \
     DB_USER=sqladmin \
     DB_PASSWORD=<password> \
     DB_ENCRYPT=true \
-    REDIS_HOST=alexdrikkelek-redis.redis.cache.windows.net \
-    REDIS_PORT=6380 \
-    REDIS_PASSWORD=<redis-key> \
-    REDIS_TLS=true \
     AZURE_STORAGE_CONNECTION_STRING=<connection-string> \
     APPINSIGHTS_INSTRUMENTATIONKEY=<insights-key>
 ```
+
+**Note:** Redis environment variables are not needed as the backend uses in-memory storage.
 
 ### Frontend Environment Variables
 
@@ -508,12 +489,11 @@ Set via Azure Portal → Static Web App → Configuration:
 ```
 NEXT_PUBLIC_API_URL=https://alexdrikkelek-backend.azurewebsites.net
 NEXT_PUBLIC_SOCKET_URL=https://alexdrikkelek-backend.azurewebsites.net
-NEXT_PUBLIC_AZURE_AD_B2C_TENANT_NAME=yourname.b2clogin.com
-NEXT_PUBLIC_AZURE_AD_B2C_CLIENT_ID=<client-id>
-NEXT_PUBLIC_AZURE_AD_B2C_POLICY_NAME=B2C_1_signupsignin
 NEXT_PUBLIC_ENABLE_CHROMECAST=true
 NEXT_PUBLIC_MAX_PLAYERS=10
 ```
+
+**Note:** Azure AD B2C environment variables are not needed as the application uses anonymous access.
 
 ---
 
@@ -694,4 +674,4 @@ az sql db ltr-policy set \
 
 ---
 
-**Last updated:** 12-11-2024
+**Last updated:** 17-11-2025

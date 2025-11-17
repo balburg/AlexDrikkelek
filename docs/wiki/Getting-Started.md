@@ -98,15 +98,11 @@ DB_USER=sa
 DB_PASSWORD=YourPassword123
 DB_ENCRYPT=false
 
-# Redis (optional for basic features)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
 # Azure services (optional for local development)
 # Leave these empty for basic local testing
 ```
 
-> **Note:** For basic local development and testing, you can run the application without Azure SQL and Redis. Some features like persistent storage and caching will be disabled.
+> **Note:** For basic local development and testing, you can run the application without Azure SQL. The backend uses in-memory storage for session management.
 
 ### 4. Run the Application
 
@@ -160,7 +156,6 @@ docker-compose up
 This will start:
 - Frontend on http://localhost:3000
 - Backend on http://localhost:3001
-- Redis on localhost:6379 (for caching)
 
 To run in detached mode:
 ```bash
@@ -294,4 +289,4 @@ For more troubleshooting help, see the [Troubleshooting Guide](./Troubleshooting
 
 ---
 
-**Last updated:** 12-11-2025
+**Last updated:** 17-11-2025

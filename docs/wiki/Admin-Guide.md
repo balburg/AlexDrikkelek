@@ -188,7 +188,7 @@ How themes are applied across the application:
 - **CSS Custom Properties**: Themes use CSS variables (`--color-primary`, etc.)
 - **Global Application**: All UI components automatically use theme colors
 - **Real-time Updates**: Changes apply instantly via ThemeProvider React context
-- **Persistent Storage**: Active theme stored in Redis cache
+- **Persistent Storage**: Active theme stored in backend in-memory storage
 - **Session Consistency**: All connected users see the same theme
 
 **Affected UI Elements:**
@@ -269,7 +269,7 @@ How themes are applied across the application:
 1. Refresh the page (Ctrl+F5 or Cmd+Shift+R)
 2. Clear browser cache
 3. Check browser console for errors (F12)
-4. Verify Redis connection is working
+4. Verify backend connection is working
 5. Confirm the theme is marked as "ACTIVE"
 
 ### Custom Theme Creation Fails
@@ -336,8 +336,8 @@ How themes are applied across the application:
 
 **Possible Causes:**
 
-1. **Redis Connection Issue**
-   - Check Redis service status
+1. **Backend Connection Issue**
+   - Check backend service status
    - Verify connection configuration
    - Check backend logs
 
@@ -394,4 +394,4 @@ Need help with Style Pack Management?
 
 ---
 
-**Last updated:** 13-11-2025
+**Last updated:** 17-11-2025

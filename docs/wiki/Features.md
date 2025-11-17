@@ -364,8 +364,8 @@ if (navigator.share) {
 
 **Data Storage:**
 - Azure SQL Database
-- Azure Cache for Redis
-- Session management
+- In-memory storage (single instance)
+- Session management with sticky sessions
 - Real-time state sync
 
 ## Feature Roadmap
@@ -455,4 +455,4 @@ For more information about specific features:
 
 ---
 
-**Last updated:** 13-11-2025
+**Last updated:** 17-11-2025
