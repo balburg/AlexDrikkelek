@@ -269,7 +269,7 @@ How themes are applied across the application:
 1. Refresh the page (Ctrl+F5 or Cmd+Shift+R)
 2. Clear browser cache
 3. Check browser console for errors (F12)
-4. Verify Redis connection is working
+4. Verify backend connection is working
 5. Confirm the theme is marked as "ACTIVE"
 
 ### Custom Theme Creation Fails

@@ -405,8 +405,9 @@ The project includes `azure-pipelines.yml` for automated deployments.
    ```
    AZURE_STATIC_WEB_APPS_API_TOKEN: <from Static Web Apps>
    DB_PASSWORD: <database password>
-   REDIS_PASSWORD: <redis access key>
    ```
+
+**Note:** Redis variables are not needed as the backend uses in-memory storage.
 
 ### GitHub Actions (Alternative)
 

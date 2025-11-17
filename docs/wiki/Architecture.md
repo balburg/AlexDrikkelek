@@ -136,7 +136,7 @@ packages/backend/
 │   │
 │   ├── config/               # Configuration
 │   │   ├── database.ts       # Database connection
-│   │   ├── redis.ts          # Redis connection
+│   │   ├── inMemoryStore.ts  # In-memory storage
 │   │   └── env.ts           # Environment variables
 │   │
 │   ├── models/               # Data models
@@ -443,7 +443,7 @@ The current implementation uses in-memory storage and is designed for single-ins
 
 **Tracked Metrics:**
 - Request duration and throughput
-- Dependency calls (DB, Redis, External APIs)
+- Dependency calls (DB, External APIs)
 - Exception tracking and stack traces
 - Custom events (game created, game started, challenge completed)
 - User sessions and active players
