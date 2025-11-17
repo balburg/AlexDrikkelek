@@ -3,6 +3,7 @@
 import { Challenge, ChallengeType } from '@/types/game';
 import { useState } from 'react';
 
+
 interface ChallengeModalProps {
   challenge: Challenge;
   playerName: string;
@@ -17,6 +18,9 @@ export default function ChallengeModal({
   onClose,
 }: ChallengeModalProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  // State for interrogation card reveal animation
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   const handleSubmit = () => {
     if (challenge.type === ChallengeType.TRIVIA) {
@@ -26,6 +30,17 @@ export default function ChallengeModal({
     } else {
       // For action, dare, and drinking challenges, just mark as complete
       onComplete(true);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (!isRevealed && !isFlipping) {
+      setIsFlipping(true);
+      // After animation completes, reveal the challenge
+      setTimeout(() => {
+        setIsRevealed(true);
+        setIsFlipping(false);
+      }, 1000); // Match the animation duration
     }
   };
 
@@ -61,7 +76,41 @@ export default function ChallengeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-light-yellow rounded-3xl shadow-2xl max-w-md w-full mx-auto animate-scale-in overflow-hidden">
+      {!isRevealed ? (
+        /* Interrogation Card - Question Mark */
+        <div 
+          onClick={handleCardClick}
+          className={`bg-gradient-to-br from-accent-blue via-accent-purple to-primary rounded-3xl shadow-2xl max-w-md w-full mx-auto cursor-pointer overflow-hidden ${
+            isFlipping ? 'animate-card-flip' : 'animate-question-pulse'
+          }`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleCardClick();
+            }
+          }}
+          aria-label="Click to reveal challenge"
+        >
+          <div className="p-12 text-center">
+            <div className="text-9xl mb-6 filter drop-shadow-2xl">❓</div>
+            <h2 className="text-3xl font-black text-white drop-shadow-lg mb-4">
+              Mystery Challenge!
+            </h2>
+            <p className="text-xl font-bold text-white/90 drop-shadow">
+              Tap to reveal your challenge
+            </p>
+            <div className="mt-8 animate-bounce">
+              <div className="inline-block bg-white/20 rounded-full px-6 py-3 backdrop-blur-sm">
+                <p className="text-lg font-bold text-white">👆 Tap Here 👆</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Revealed Challenge Card */
+        <div className="bg-light-yellow rounded-3xl shadow-2xl max-w-md w-full mx-auto animate-scale-in overflow-hidden">
         {/* Compact Header */}
         <div className={`bg-gradient-to-r ${getChallengeColor()} p-5 text-center`}>
           <div className="text-6xl mb-2">{getChallengeIcon()}</div>
@@ -137,6 +186,7 @@ export default function ChallengeModal({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }
