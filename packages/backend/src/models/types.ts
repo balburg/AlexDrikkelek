@@ -31,6 +31,7 @@ export interface Player {
   isConnected: boolean;
   joinedAt: Date;
   lastDisconnectedAt?: Date;
+  turnsToSkip?: number; // Number of turns the player must skip
 }
 
 // Board Types
@@ -105,6 +106,11 @@ export enum SocketEvent {
   PLAYER_MOVED = 'player_moved',
   CHALLENGE_STARTED = 'challenge_started',
   CHALLENGE_COMPLETED = 'challenge_completed',
+  
+  // Challenge Voting
+  CHALLENGE_VOTE_STARTED = 'challenge_vote_started',
+  CHALLENGE_VOTE_CAST = 'challenge_vote_cast',
+  CHALLENGE_VOTE_COMPLETED = 'challenge_vote_completed',
   
   // Turn Management
   NEXT_TURN = 'next_turn',
@@ -200,4 +206,19 @@ export interface CustomSpacePack {
   spaces: CustomSpace[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Challenge Voting Types
+export interface ChallengeVote {
+  playerId: string;
+  vote: boolean; // true for "Yes", false for "No"
+}
+
+export interface ChallengeVoteSession {
+  roomId: string;
+  challengingPlayerId: string;
+  challengingPlayerName: string;
+  challengeId: string;
+  votes: ChallengeVote[];
+  totalVoters: number; // Number of players eligible to vote (excluding the challenging player)
 }
