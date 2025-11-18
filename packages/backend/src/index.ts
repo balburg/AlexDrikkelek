@@ -9,6 +9,7 @@ import * as settingsService from './services/settingsService';
 import * as stylePackService from './services/stylePackService';
 import * as customSpaceService from './services/customSpaceService';
 import * as gameStatsService from './services/gameStatsService';
+import * as databaseStatusService from './services/databaseStatusService';
 import { authMiddleware, verifyCredentials } from './middleware/auth';
 
 dotenv.config();
@@ -444,6 +445,17 @@ async function start() {
       return stats;
     } catch (error) {
       reply.code(500).type('application/json').send({ error: 'Failed to get game statistics' });
+    }
+  });
+
+  // Database Status route (Admin - Protected)
+  fastify.get('/api/admin/database-status', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      const status = await databaseStatusService.getDatabaseStatus();
+      reply.type('application/json');
+      return status;
+    } catch (error) {
+      reply.code(500).type('application/json').send({ error: 'Failed to get database status' });
     }
   });
 

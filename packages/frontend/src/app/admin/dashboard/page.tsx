@@ -62,6 +62,13 @@ export default function AdminDashboardPage() {
       href: '/admin/statistics',
       color: 'bg-primary',
     },
+    {
+      title: 'Database Status',
+      description: 'Monitor SQL Server connection health',
+      icon: '🔌',
+      href: '/admin/database-status',
+      color: 'bg-red-500',
+    },
   ];
 
   return (
