@@ -1,4 +1,4 @@
-import { ChallengeVoteSession, ChallengeVote } from '../models/types';
+import { ChallengeVoteSession } from '../models/types';
 import { getInMemoryStore } from '../config/inMemoryStore';
 
 const store = getInMemoryStore();
