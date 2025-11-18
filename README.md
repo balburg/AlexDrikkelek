@@ -100,6 +100,23 @@ npm run dev:frontend
 npm run dev:backend
 ```
 
+### Debugging in VS Code
+
+Example VS Code debug configurations are provided in `.vscode.example/launch.json`:
+
+- **Debug Backend**: Start the backend in debug mode using npm scripts
+- **Debug Backend (Direct)**: Start the backend directly with tsx for faster debugging
+- **Debug Backend Tests**: Run tests in debug mode
+
+To set up debugging:
+1. Copy `.vscode.example/launch.json` to `.vscode/launch.json`
+2. Ensure you have created a `.env` file in `packages/backend/` (copy from `.env.example`)
+3. Open the Run and Debug panel in VS Code (Ctrl+Shift+D / Cmd+Shift+D)
+4. Select a debug configuration from the dropdown
+5. Press F5 or click the green play button
+
+**Note**: The backend environment variables will now load correctly regardless of where you run the debug session from, as the code uses absolute paths relative to the source files.
+
 ### Building
 
 Build all packages:
