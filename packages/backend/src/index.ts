@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType, Challenge, RoomStatus } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
+import * as challengeVotingService from './services/challengeVotingService';
 import * as settingsService from './services/settingsService';
 import * as stylePackService from './services/stylePackService';
 import * as customSpaceService from './services/customSpaceService';
@@ -648,10 +649,11 @@ async function start() {
           // Check if player landed on a special tile and trigger challenge
           else if (tile && (tile.type === TileType.CHALLENGE || tile.type === TileType.BONUS || tile.type === TileType.PENALTY)) {
             // Get a random challenge based on tile type
-            // CHALLENGE tiles give trivia questions
+            // CHALLENGE tiles can be any type (ACTION, DARE, DRINKING, etc.) - they require voting
             let challengeType;
             if (tile.type === TileType.CHALLENGE) {
-              challengeType = ChallengeType.TRIVIA;
+              // For CHALLENGE tiles, use random challenge type
+              challengeType = undefined;
             }
             const challenge = await challengeService.getRandomChallenge(challengeType);
             
@@ -661,6 +663,35 @@ async function start() {
               tile,
               challenge,
             });
+
+            // Start voting session for ACTION, DARE, and DRINKING challenges
+            if (challenge.type === ChallengeType.ACTION || 
+                challenge.type === ChallengeType.DARE || 
+                challenge.type === ChallengeType.DRINKING) {
+              // Get number of other players (exclude the challenging player)
+              const otherPlayers = room.players.filter(p => p.id !== data.playerId && p.isConnected);
+              
+              if (otherPlayers.length > 0) {
+                // Create voting session
+                await challengeVotingService.createVotingSession(
+                  data.roomId,
+                  data.playerId,
+                  player?.name || 'Unknown',
+                  challenge.id,
+                  otherPlayers.length
+                );
+
+                // Notify players to vote
+                io.to(data.roomId).emit(SocketEvent.CHALLENGE_VOTE_STARTED, {
+                  challengingPlayerId: data.playerId,
+                  challengingPlayerName: player?.name,
+                  challengeId: challenge.id,
+                  totalVoters: otherPlayers.length,
+                });
+
+                console.log(`Voting started for ${player?.name}'s ${challenge.type} challenge`);
+              }
+            }
 
             console.log(`Challenge started for player ${player?.name} on ${tile.type} tile`);
           } else {
@@ -725,6 +756,84 @@ async function start() {
           console.log(`Challenge ${isCorrect ? 'completed' : 'failed'} by player ${player?.name}`);
         } catch (error) {
           socket.emit('error', { message: 'Failed to complete challenge' });
+        }
+      });
+
+      // Cast Vote for Challenge
+      socket.on(SocketEvent.CHALLENGE_VOTE_CAST, async (data: { 
+        roomId: string; 
+        playerId: string; 
+        vote: boolean; // true for "Yes", false for "No"
+      }) => {
+        try {
+          const session = await challengeVotingService.castVote(data.roomId, data.playerId, data.vote);
+          
+          if (!session) {
+            socket.emit('error', { message: 'Voting session not found' });
+            return;
+          }
+
+          // Broadcast vote count update
+          io.to(data.roomId).emit(SocketEvent.CHALLENGE_VOTE_CAST, {
+            votesReceived: session.votes.length,
+            totalVoters: session.totalVoters,
+          });
+
+          console.log(`Vote cast: ${session.votes.length}/${session.totalVoters}`);
+
+          // Check if voting is complete
+          if (challengeVotingService.isVotingComplete(session)) {
+            const voteResult = challengeVotingService.calculateVoteResult(session);
+            
+            // Get room to apply penalties if needed
+            const room = await gameService.getRoom(data.roomId);
+            if (!room) {
+              socket.emit('error', { message: 'Room not found' });
+              return;
+            }
+
+            const challengingPlayer = room.players.find(p => p.id === session.challengingPlayerId);
+
+            // If vote failed, penalize the player with 2 turns to skip
+            if (!voteResult && challengingPlayer) {
+              challengingPlayer.turnsToSkip = 2;
+              await gameService.updateRoom(room);
+            }
+
+            // Broadcast vote result
+            io.to(data.roomId).emit(SocketEvent.CHALLENGE_VOTE_COMPLETED, {
+              challengingPlayerId: session.challengingPlayerId,
+              challengingPlayerName: session.challengingPlayerName,
+              success: voteResult,
+              yesVotes: session.votes.filter(v => v.vote).length,
+              noVotes: session.votes.filter(v => !v.vote).length,
+              penalized: !voteResult,
+            });
+
+            // Also broadcast as challenge completed for consistency
+            io.to(data.roomId).emit(SocketEvent.CHALLENGE_COMPLETED, {
+              playerId: session.challengingPlayerId,
+              playerName: session.challengingPlayerName,
+              success: voteResult,
+            });
+
+            // Clean up voting session
+            await challengeVotingService.deleteVotingSession(data.roomId);
+
+            // Move to next turn
+            const updatedRoom = await gameService.nextTurn(data.roomId);
+            if (updatedRoom) {
+              io.to(data.roomId).emit(SocketEvent.TURN_CHANGED, {
+                currentTurn: updatedRoom.currentTurn,
+                currentPlayer: updatedRoom.players[updatedRoom.currentTurn],
+              });
+            }
+
+            console.log(`Voting completed for ${session.challengingPlayerName}: ${voteResult ? 'Success' : 'Failed'}`);
+          }
+        } catch (error) {
+          console.error('Error casting vote:', error);
+          socket.emit('error', { message: 'Failed to cast vote' });
         }
       });
 

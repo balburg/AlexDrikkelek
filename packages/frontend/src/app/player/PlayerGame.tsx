@@ -2,8 +2,9 @@
 
 import { useSocket } from '@/lib/SocketProvider';
 import { useState, useEffect } from 'react';
-import { GameRoom, SocketEvent, Challenge, Tile, Player } from '@/types/game';
+import { GameRoom, SocketEvent, Challenge, Tile, Player, ChallengeType } from '@/types/game';
 import ChallengeModal from '@/components/ChallengeModal';
+import VotingModal from '@/components/VotingModal';
 import CastButton from '@/components/CastButton';
 import WinnerCelebration from '@/components/WinnerCelebration';
 import { AVATARS, getRandomAvatar } from '@/lib/avatars';
@@ -19,6 +20,14 @@ export default function PlayerPage() {
     playerName: string;
     playerId: string;
   } | null>(null);
+  const [votingSession, setVotingSession] = useState<{
+    challengingPlayerId: string;
+    challengingPlayerName: string;
+    challengeId: string;
+    totalVoters: number;
+    votesReceived: number;
+  } | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
   const [diceRoll, setDiceRoll] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
@@ -140,10 +149,67 @@ export default function PlayerPage() {
       setMessage(`${data.playerName} got a challenge!`);
     });
 
+    // Listen for voting started
+    socket.on(SocketEvent.CHALLENGE_VOTE_STARTED, (data: {
+      challengingPlayerId: string;
+      challengingPlayerName: string;
+      challengeId: string;
+      totalVoters: number;
+    }) => {
+      // Only show voting modal to other players (not the challenging player)
+      if (socket.id !== data.challengingPlayerId) {
+        setVotingSession({
+          challengingPlayerId: data.challengingPlayerId,
+          challengingPlayerName: data.challengingPlayerName,
+          challengeId: data.challengeId,
+          totalVoters: data.totalVoters,
+          votesReceived: 0,
+        });
+        setHasVoted(false);
+      }
+      setMessage(`Vote if ${data.challengingPlayerName} completed the challenge!`);
+    });
+
+    // Listen for vote updates
+    socket.on(SocketEvent.CHALLENGE_VOTE_CAST, (data: {
+      votesReceived: number;
+      totalVoters: number;
+    }) => {
+      if (votingSession) {
+        setVotingSession({
+          ...votingSession,
+          votesReceived: data.votesReceived,
+        });
+      }
+    });
+
+    // Listen for voting completed
+    socket.on(SocketEvent.CHALLENGE_VOTE_COMPLETED, (data: {
+      challengingPlayerId: string;
+      challengingPlayerName: string;
+      success: boolean;
+      yesVotes: number;
+      noVotes: number;
+      penalized: boolean;
+    }) => {
+      setVotingSession(null);
+      setHasVoted(false);
+      setCurrentChallenge(null);
+      
+      if (data.penalized) {
+        setMessage(`${data.challengingPlayerName} failed! (${data.yesVotes} yes, ${data.noVotes} no) - Skipping 2 turns 😢`);
+      } else {
+        setMessage(`${data.challengingPlayerName} succeeded! (${data.yesVotes} yes, ${data.noVotes} no) 🎉`);
+      }
+    });
+
     // Listen for challenge completion
     socket.on(SocketEvent.CHALLENGE_COMPLETED, (data: { playerId: string; playerName: string; success: boolean }) => {
-      setMessage(`${data.playerName} ${data.success ? 'completed' : 'failed'} the challenge!`);
-      setCurrentChallenge(null);
+      // Only update if there's no voting session (for trivia challenges)
+      if (!votingSession) {
+        setMessage(`${data.playerName} ${data.success ? 'completed' : 'failed'} the challenge!`);
+        setCurrentChallenge(null);
+      }
     });
 
     // Listen for turn changes
@@ -182,13 +248,16 @@ export default function PlayerPage() {
       socket.off(SocketEvent.DICE_ROLLED);
       socket.off(SocketEvent.PLAYER_MOVED);
       socket.off(SocketEvent.CHALLENGE_STARTED);
+      socket.off(SocketEvent.CHALLENGE_VOTE_STARTED);
+      socket.off(SocketEvent.CHALLENGE_VOTE_CAST);
+      socket.off(SocketEvent.CHALLENGE_VOTE_COMPLETED);
       socket.off(SocketEvent.CHALLENGE_COMPLETED);
       socket.off(SocketEvent.TURN_CHANGED);
       socket.off(SocketEvent.PLAYER_FINISHED);
       socket.off(SocketEvent.GAME_ENDED);
       socket.off('error');
     };
-  }, [socket, gameRoom, setPlayerSessionId]);
+  }, [socket, gameRoom, setPlayerSessionId, votingSession]);
 
   const handleCreateRoom = () => {
     if (!socket || !playerName) return;
@@ -223,6 +292,17 @@ export default function PlayerPage() {
       challengeId: currentChallenge.challenge.id,
       success,
       answer,
+    });
+  };
+
+  const handleVote = (vote: boolean) => {
+    if (!socket || !gameRoom || !votingSession) return;
+    
+    setHasVoted(true);
+    socket.emit(SocketEvent.CHALLENGE_VOTE_CAST, {
+      roomId: gameRoom.id,
+      playerId: socket.id,
+      vote,
     });
   };
 
@@ -514,13 +594,24 @@ export default function PlayerPage() {
         )}
       </div>
 
-      {/* Challenge Modal */}
-      {currentChallenge && currentChallenge.playerId === socket?.id && (
+      {/* Challenge Modal - Only show to the player doing the challenge */}
+      {currentChallenge && currentChallenge.playerId === socket?.id && currentChallenge.challenge.type === ChallengeType.TRIVIA && (
         <ChallengeModal
           challenge={currentChallenge.challenge}
           playerName={currentChallenge.playerName}
           onComplete={handleChallengeComplete}
           onClose={() => setCurrentChallenge(null)}
+        />
+      )}
+
+      {/* Voting Modal - Show to other players for ACTION/DARE/DRINKING challenges */}
+      {votingSession && (
+        <VotingModal
+          challengingPlayerName={votingSession.challengingPlayerName}
+          votesReceived={votingSession.votesReceived}
+          totalVoters={votingSession.totalVoters}
+          onVote={handleVote}
+          hasVoted={hasVoted}
         />
       )}
 

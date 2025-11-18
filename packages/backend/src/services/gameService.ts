@@ -324,7 +324,20 @@ export async function nextTurn(roomId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room) return null;
   
+  // Move to next player
   room.currentTurn = (room.currentTurn + 1) % room.players.length;
+  
+  // Handle turn skipping for penalized players
+  const currentPlayer = room.players[room.currentTurn];
+  if (currentPlayer.turnsToSkip && currentPlayer.turnsToSkip > 0) {
+    currentPlayer.turnsToSkip -= 1;
+    console.log(`Player ${currentPlayer.name} skipping turn. ${currentPlayer.turnsToSkip} turns left to skip.`);
+    
+    // Recursively advance to next player
+    await updateRoom(room);
+    return nextTurn(roomId);
+  }
+  
   await updateRoom(room);
   
   return room;
