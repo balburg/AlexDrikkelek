@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import path from 'path';
 import { SocketEvent, TileType, ChallengeType, GameSettings, StyleTheme, CustomSpaceType, Challenge, RoomStatus } from './models/types';
 import * as gameService from './services/gameService';
 import * as challengeService from './services/challengeService';
@@ -12,7 +13,8 @@ import * as gameStatsService from './services/gameStatsService';
 import * as databaseStatusService from './services/databaseStatusService';
 import { authMiddleware, verifyCredentials } from './middleware/auth';
 
-dotenv.config();
+// Load .env from the backend package directory
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 /**
  * AlexDrikkelek Backend Server

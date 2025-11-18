@@ -1,7 +1,9 @@
 import sql from 'mssql';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load .env from the backend package directory
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const config: sql.config = {
   server: process.env.DB_SERVER || '',
