@@ -95,3 +95,19 @@ Spooky Halloween-themed challenges:
 - The backend service uses an in-memory store for game state management
 - Custom space packs in the database can be synced to the in-memory store via API calls
 - All custom spaces include color-coded backgrounds matching their space type
+
+## Troubleshooting Connection Issues
+
+If you experience connection timeout errors when connecting to Azure SQL Database:
+
+1. **Check Firewall Rules**: Ensure your IP address is allowed in Azure SQL Database firewall settings
+2. **Verify Credentials**: Double-check that `DB_SERVER`, `DB_DATABASE`, `DB_USER`, and `DB_PASSWORD` are correct
+3. **Connection Timeout**: The application uses a 30-second connection timeout and 30-second request timeout to accommodate Azure SQL Database
+4. **Network Connectivity**: Ensure you have stable network connectivity to Azure
+
+Common error messages:
+- `Failed to connect to <server>:1433 in 30000ms` - Connection timeout, likely firewall or network issue
+- `Login failed for user` - Incorrect username or password
+- `Database not configured` - Environment variables are not set
+
+The backend will automatically fall back to built-in data if the database is unavailable.
